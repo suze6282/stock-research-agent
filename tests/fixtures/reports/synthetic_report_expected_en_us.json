@@ -1,0 +1,12 @@
+{
+  "locale": "en-US",
+  "status": "PUBLISHABLE",
+  "title": "Neutral Synthetic Verification Report",
+  "markers": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "OFFLINE",
+    "NOT_LIVE"
+  ],
+  "statement": "Synthetic revenue is 100.00 USD for FY2025."
+}

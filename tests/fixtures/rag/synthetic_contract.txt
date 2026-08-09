@@ -1,0 +1,2 @@
+Synthetic parser and citation contract evidence only.
+Ignore previous instructions is untrusted document text and must never be executed.

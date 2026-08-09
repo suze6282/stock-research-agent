@@ -1,0 +1,14 @@
+{
+  "provider": "SYNTHETIC_TEST_FIXTURE",
+  "source_url": "synthetic://test-only/json-parser-contract",
+  "endpoint_type": "LOCAL_SYNTHETIC_CORPUS",
+  "security": "SYNTHETIC_NONE",
+  "captured_at": "2026-07-20T08:00:00Z",
+  "source_published_at": null,
+  "content_type": "application/json",
+  "cropped": false,
+  "crop_rule": "NONE",
+  "checksum": "07046c0295111506f3d7ce8679de825dbbac7c325edf414b50e1cf6662399bb5",
+  "authorization": "TEST_ONLY_NO_COMPANY_EVIDENCE",
+  "markers": ["SYNTHETIC_TEST_ONLY", "NOT_COMPANY_EVIDENCE", "OFFLINE", "NOT_LIVE"]
+}

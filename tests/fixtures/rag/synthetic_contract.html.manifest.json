@@ -1,0 +1,14 @@
+{
+  "provider": "SYNTHETIC_TEST_FIXTURE",
+  "source_url": "synthetic://test-only/html-parser-contract",
+  "endpoint_type": "LOCAL_SYNTHETIC_CORPUS",
+  "security": "SYNTHETIC_NONE",
+  "captured_at": "2026-07-20T08:00:00Z",
+  "source_published_at": null,
+  "content_type": "text/html",
+  "cropped": false,
+  "crop_rule": "NONE",
+  "checksum": "5068f28480b42070416a756625607b9100e5de3dfeaaf5edd4f44c5c43b6842c",
+  "authorization": "TEST_ONLY_NO_COMPANY_EVIDENCE",
+  "markers": ["SYNTHETIC_TEST_ONLY", "NOT_COMPANY_EVIDENCE", "OFFLINE", "NOT_LIVE"]
+}

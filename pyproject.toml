@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stock-research-agent"
+version = "0.1.0"
+description = "Backend foundation for the stock research agent"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic>=1.16,<2",
+    "fastapi>=0.116,<1",
+    "httpx>=0.28,<1",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic>=2.11,<3",
+    "pydantic-settings>=2.10,<3",
+    "pypdf>=6,<7",
+    "sqlalchemy>=2.0,<3",
+    "structlog>=25,<26",
+    "typer>=0.16,<1",
+    "uvicorn[standard]>=0.35,<1",
+]
+
+[project.scripts]
+stock-research = "stock_research_agent.cli:app"
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.5,<3",
+    "mypy>=1.16,<2",
+    "pytest>=8,<9",
+    "pytest-asyncio>=1,<2",
+    "respx>=0.22,<1",
+    "ruff>=0.12,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stock_research_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that require an isolated PostgreSQL TEST_DATABASE_URL",
+    "live: explicitly invoked provider smoke tests that are excluded from default pytest and CI",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src"]

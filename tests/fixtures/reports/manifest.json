@@ -1,0 +1,33 @@
+{
+  "fixture_set": "stage-8-synthetic-report-v1",
+  "classification": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "OFFLINE",
+    "NOT_LIVE"
+  ],
+  "purpose": "Deterministic report, Reflection, Revision, release-gate, locale, and checksum tests only.",
+  "authorization": "Project-authored synthetic test data; prohibited as company evidence.",
+  "files": [
+    {
+      "path": "synthetic_report_input.json",
+      "sha256": "f1b2f30d55d0521eb30feb85fa14b5e1a8f0ac80ca2599e8a57301ae4f58fb9b"
+    },
+    {
+      "path": "synthetic_report_expected_en_us.json",
+      "sha256": "d77d7255e20744aaf4cb22ddd844c69fa97cb66395b32f44f8d0742e3ad5762d"
+    },
+    {
+      "path": "synthetic_report_expected_en_us.md",
+      "sha256": "db96d9518a36ebd5811df800919223f2a91881c4e50cd304dc66400ffe4581fa"
+    },
+    {
+      "path": "synthetic_report_expected_zh_cn.json",
+      "sha256": "3b68ef8e7976e49feb58142eb4a0d362cd22127d88f7b618911d67c855544bb1"
+    },
+    {
+      "path": "synthetic_report_expected_zh_cn.md",
+      "sha256": "35fd493e4d982dfc6de0a30b32ef41e436d161f0abac4950b321ce94438f81d8"
+    }
+  ]
+}

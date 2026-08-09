@@ -1,0 +1,45 @@
+{
+  "locale": "zh-CN",
+  "section_order": [
+    "RESEARCH_SCOPE",
+    "SECURITY_IDENTITY",
+    "DATA_AVAILABILITY",
+    "FINANCIAL_HEALTH",
+    "VALUATION_SNAPSHOT",
+    "DOCUMENT_EVIDENCE",
+    "CATALYST_EVIDENCE",
+    "RISK_EVIDENCE",
+    "CORPORATE_ACTIONS",
+    "DATA_QUALITY",
+    "CONFLICTS",
+    "UNSUPPORTED_CLAIMS",
+    "LIMITATIONS",
+    "CLAIM_INDEX",
+    "EVIDENCE_APPENDIX",
+    "CITATION_APPENDIX"
+  ],
+  "section_titles": [
+    "研究范围",
+    "证券身份",
+    "数据可用性",
+    "财务健康",
+    "估值快照",
+    "文档证据",
+    "催化剂证据",
+    "风险证据",
+    "公司行动",
+    "数据质量",
+    "冲突",
+    "未支持声明",
+    "限制",
+    "声明索引",
+    "证据附录",
+    "引用附录"
+  ],
+  "fixed_disclosures": {
+    "PARTIAL_QUALIFIER": "以下结果受数据可用性限制，仅反映已验证证据。",
+    "BLOCKED_DISCLOSURE": "相关能力受阻，未使用缺失信息推断事实。",
+    "NO_EVIDENCE_DISCLOSURE": "未发现可验证证据，未填补缺失内容。",
+    "CONFLICT_DISCLOSURE": "证据存在冲突，未自动选择或合并数值。"
+  }
+}

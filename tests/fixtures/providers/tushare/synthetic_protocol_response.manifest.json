@@ -1,0 +1,38 @@
+{
+  "fixture_schema_version": "1.0.0",
+  "payload_filename": "synthetic_protocol_response.json",
+  "provider": "TUSHARE_PRO_V1",
+  "source_url": null,
+  "source_endpoint_type": "TUSHARE_SYNTHETIC_PROTOCOL",
+  "security": "SYNTHETIC_SECURITY",
+  "captured_at": {
+    "date": "2026-08-01",
+    "precision": "DAY",
+    "timezone": "Asia/Shanghai",
+    "evidence_note": "Authored locally as an empty protocol envelope; no provider response was captured."
+  },
+  "source_published_at": null,
+  "content_type": "application/json",
+  "original_response_cropped": false,
+  "full_response_bytes_retained": true,
+  "crop_rules": [
+    "Not applicable: the payload is a synthetic protocol-only envelope with an empty items array.",
+    "No company, security, price, financial, disclosure, or calendar fact is represented."
+  ],
+  "payload_byte_size": 84,
+  "checksum": {
+    "algorithm": "SHA-256",
+    "value": "4a6e91a92e43c1fc15d041a8604805854ca3fb3589ad457e824b022fd1587e31"
+  },
+  "authorization_use_restrictions": [
+    "Protocol contract tests only; prohibited as production or company evidence.",
+    "No Tushare live access, entitlement, response content, or data license is represented."
+  ],
+  "production_live_qualification": "SYNTHETIC_TEST_ONLY; NOT_COMPANY_EVIDENCE; OFFLINE; NOT_LIVE; does not validate production access.",
+  "data_origin": "SYNTHETIC_TEST_ONLY",
+  "company_evidence_status": "NOT_COMPANY_EVIDENCE",
+  "access_mode": "OFFLINE",
+  "live_status": "NOT_LIVE",
+  "license_status": "TEST_ONLY",
+  "credential_status": "ABSENT"
+}

@@ -1,0 +1,18 @@
+{
+  "partial_real_evidence": {
+    "status": "PARTIAL",
+    "checksum": "aae8d427113e0a82c11cec97021ab2ee9f796a1acb52ab1f9013e729214b0eb2",
+    "section_statuses": {
+      "SECURITY_IDENTITY": "PASS",
+      "DATA_AVAILABILITY": "NOT_REQUESTED",
+      "FINANCIAL_HEALTH": "PARTIAL",
+      "VALUATION_SNAPSHOT": "NOT_REQUESTED",
+      "DOCUMENT_EVIDENCE": "BLOCKED",
+      "CATALYST_EVIDENCE": "NOT_REQUESTED",
+      "RISK_EVIDENCE": "NOT_REQUESTED",
+      "CORPORATE_ACTIONS": "NOT_REQUESTED",
+      "DATA_QUALITY": "PASS",
+      "LIMITATIONS": "BLOCKED"
+    }
+  }
+}

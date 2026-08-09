@@ -1,0 +1,9 @@
+# Fixture checksums are over exact package bytes and must survive Windows checkouts.
+src/stock_research_agent/providers/fixtures/data/*.json text eol=lf
+tests/fixtures/rag/*.txt text eol=lf
+tests/fixtures/rag/*.html text eol=lf
+tests/fixtures/rag/*.json text eol=lf
+tests/fixtures/research_agent/*.json text eol=lf
+tests/fixtures/reports/*.json text eol=lf
+tests/fixtures/reports/*.md text eol=lf
+tests/fixtures/providers/**/*.json text eol=lf

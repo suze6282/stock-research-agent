@@ -1,0 +1,12 @@
+{
+  "locale": "zh-CN",
+  "status": "PUBLISHABLE",
+  "title": "中性合成验证报告",
+  "markers": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "OFFLINE",
+    "NOT_LIVE"
+  ],
+  "statement": "合成收入为100.00 USD，期间为FY2025。"
+}

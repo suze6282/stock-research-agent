@@ -1,0 +1,46 @@
+{
+  "fixture_schema_version": "1.0.0",
+  "payload_filename": "test001_sse_public.json",
+  "provider": "STAGE1_SSE_FIXTURE",
+  "source_url": "https://example.invalid/synthetic/sse-daily",
+  "source_endpoint_type": "SYNTHETIC_SSE_DAILY_SCHEMA",
+  "security": "TEST001.SH",
+  "captured_at": {
+    "date": "2026-01-16",
+    "precision": "DAY",
+    "timezone": "Asia/Shanghai",
+    "evidence_note": "This project-authored synthetic fixture was fixed for public contract tests."
+  },
+  "source_published_at": null,
+  "content_type": "application/json",
+  "original_response_cropped": false,
+  "full_response_bytes_retained": false,
+  "crop_rules": [
+    "No provider response exists; every identity and value is synthetic.",
+    "Only the minimal daily-price schema and boundary values needed by tests are represented."
+  ],
+  "payload_byte_size": 266,
+  "checksum": {
+    "algorithm": "SHA-256",
+    "value": "50059c707187f0c790332b47efdff99a8bb8b5af981323d5932fe82ba19b0eae"
+  },
+  "authorization_use_restrictions": [
+    "Project-authored test asset only; prohibited as company or provider evidence.",
+    "No SSE response, market-data entitlement, or production access is represented."
+  ],
+  "production_live_qualification": "SYNTHETIC_TEST_ONLY; NOT_COMPANY_EVIDENCE; NOT_PROVIDER_DATA; OFFLINE; NOT_LIVE.",
+  "data_origin": "FIXTURE",
+  "access_mode": "OFFLINE",
+  "live_status": "NOT_LIVE",
+  "synthetic": true,
+  "test_only": true,
+  "company_evidence": false,
+  "live": false,
+  "markers": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "NOT_PROVIDER_DATA",
+    "OFFLINE",
+    "NOT_LIVE"
+  ]
+}

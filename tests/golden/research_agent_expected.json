@@ -1,0 +1,37 @@
+{
+  "plan_checksum": "cf7ccf4e2cf48bdb58a40b799074c6ab0e8b125b37900035434611467f48dbb4",
+  "tool_order": [
+    "get_data_snapshot",
+    "get_financial_periods",
+    "get_normalized_financial_facts",
+    "get_financial_metrics",
+    "get_metric_lineage",
+    "get_corporate_actions",
+    "search_document_chunks"
+  ],
+  "industrial_idempotency_key": "495469a132d0607a8da772058fd2154a595f0fcd679aa8eb3135593763b550b9",
+  "micron_idempotency_key": "6603fe6a02f1f553b08711a24336bf9502af5c5e49597bf0dfc09fcb0ede5a48",
+  "industrial_package_checksum": "4a0cd43d703e8a869ebd141082a4fde3e3a13fe06aba84e3c46d57b340b6ec3f",
+  "micron_package_checksum": "2264168ca166f5878ed8b621b6eea197d28a28123d1fe2f0fa872642a676048e",
+  "industrial_terminal": "PARTIAL",
+  "micron_terminal": "PARTIAL",
+  "industrial_claim_types": [
+    "DATA_QUALITY",
+    "IDENTITY",
+    "LIMITATION"
+  ],
+  "micron_claim_types": [
+    "DATA_QUALITY",
+    "IDENTITY",
+    "LIMITATION"
+  ],
+  "synthetic_real_isolation": true,
+  "blocked_evidence_status": "BLOCKED",
+  "blocked_evidence_type": "BLOCKED_CAPABILITY_EVIDENCE",
+  "allowed_real_claim_types": [
+    "DATA_QUALITY",
+    "IDENTITY",
+    "LIMITATION"
+  ],
+  "future_rejection_code": "FUTURE_DATA"
+}

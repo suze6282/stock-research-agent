@@ -1,0 +1,45 @@
+{
+  "locale": "en-US",
+  "section_order": [
+    "RESEARCH_SCOPE",
+    "SECURITY_IDENTITY",
+    "DATA_AVAILABILITY",
+    "FINANCIAL_HEALTH",
+    "VALUATION_SNAPSHOT",
+    "DOCUMENT_EVIDENCE",
+    "CATALYST_EVIDENCE",
+    "RISK_EVIDENCE",
+    "CORPORATE_ACTIONS",
+    "DATA_QUALITY",
+    "CONFLICTS",
+    "UNSUPPORTED_CLAIMS",
+    "LIMITATIONS",
+    "CLAIM_INDEX",
+    "EVIDENCE_APPENDIX",
+    "CITATION_APPENDIX"
+  ],
+  "section_titles": [
+    "Research Scope",
+    "Security Identity",
+    "Data Availability",
+    "Financial Health",
+    "Valuation Snapshot",
+    "Document Evidence",
+    "Catalyst Evidence",
+    "Risk Evidence",
+    "Corporate Actions",
+    "Data Quality",
+    "Conflicts",
+    "Unsupported Claims",
+    "Limitations",
+    "Claim Index",
+    "Evidence Appendix",
+    "Citation Appendix"
+  ],
+  "fixed_disclosures": {
+    "PARTIAL_QUALIFIER": "The following results are limited by data availability and reflect verified evidence only.",
+    "BLOCKED_DISCLOSURE": "The capability is blocked; missing information was not used to infer facts.",
+    "NO_EVIDENCE_DISCLOSURE": "No verifiable evidence is available; missing content was not filled.",
+    "CONFLICT_DISCLOSURE": "Evidence conflicts are preserved; values were not selected or combined automatically."
+  }
+}

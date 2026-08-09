@@ -1,0 +1,16 @@
+{
+  "fixture_version": "synthetic-research-v1",
+  "content_type": "application/json",
+  "checksum_algorithm": "sha256",
+  "checksum": "4f8e3bc986f3453ad5af7e9d1e2d5b1d7e0bde89f39ddc3a82df7a9c6a0c004d",
+  "test_only": true,
+  "company_evidence": false,
+  "network_required": false,
+  "markers": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "OFFLINE",
+    "NOT_LIVE"
+  ],
+  "usage": "Parser, citation, retrieval, orchestration, conflict, and safety tests only."
+}

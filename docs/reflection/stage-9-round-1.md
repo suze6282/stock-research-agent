@@ -1,0 +1,50 @@
+# Stage 9 Reflection — Round 1
+
+Review date: 2026-08-01
+
+Branch: `stage-9/production-data-providers`
+
+Scope: Tasks 0–75 and the first Task 76 full-regression pass. Production network access and credential resolution were not
+authorized or attempted.
+
+Boundary record: `network=FORBIDDEN`; `credentials=NOT_READ`;
+`live=NOT_ATTEMPTED`. The review used source inspection, existing offline contract
+tests, migration/model comparison, and loopback-only real PostgreSQL acceptance.
+
+## Findings
+
+| ID | Role | Severity | Description | Evidence | Affected files | Fix | Blocking | Status |
+|---|---|---|---|---|---|---|---|---|
+| S9-R1-001 | Data platform | HIGH | The security-scoped readiness query returned only one persisted Sync Request's Provider and Capability metadata. It did not read the latest `ProviderHealthSnapshot`, return a readiness status, or return deterministic limiting reasons. A consumer could therefore see `IMPLEMENTED_OFFLINE` without the production-blocking reasons. | RED: Task 73 PostgreSQL expectation and missing-health regression failed. GREEN: the query now aggregates at most 100 stable Provider/capability rows, reads each latest health snapshot, returns overall status and namespaced reasons, and fails closed when health is absent. | `src/stock_research_agent/db/repositories/providers.py`, `tests/integration/test_stage9_company_acceptance.py`, Provider query/API/Tool/CLI tests | Implemented the health-backed bounded aggregate and `HEALTH_SNAPSHOT_NOT_FOUND` fallback; reran focused PostgreSQL and shared query-surface tests. | YES | FIXED |
+| S9-R1-002 | Database and concurrency | HIGH | The database CHECK vocabulary for `ProviderHealthSnapshot` disagreed with the domain enums: the model/migration accepted obsolete aliases while rejecting domain values. | RED: domain-valid persistence failed and obsolete `NOT_CONFIGURED`/`REFERENCE_ONLY`/`PASS` insert succeeded. GREEN: real PostgreSQL accepts `BLOCKED`, `CONFIGURED_METADATA_ONLY`, `MISSING`, `PASSED`, and `CANCELLED`, while rejecting the obsolete aliases. | `src/stock_research_agent/domain/providers/enums.py`, `src/stock_research_agent/db/models/providers.py`, `migrations/versions/0008_create_production_data_providers.py`, `tests/integration/test_provider_health_postgres.py` | Aligned the unmerged Stage 9 model/migration with all domain enum values and added transaction-neutral health persistence/readback. | YES | FIXED |
+| S9-R1-003 | Historical immutability | HIGH | `ProviderHealthSnapshot` was documented and modeled as append-only, but `_create_guards()` omitted its immutable trigger. | RED: trigger presence and UPDATE/DELETE rejection regressions failed. GREEN: `trg_provider_health_snapshots_immutable` exists and both mutations raise `STAGE9_IMMUTABLE_RECORD` in real PostgreSQL. | `migrations/versions/0008_create_production_data_providers.py`, `tests/integration/test_provider_migrations.py`, `tests/integration/test_provider_health_postgres.py` | Added the health table to the shared immutable trigger and verified trigger presence and behavior. | YES | FIXED |
+| S9-R1-004 | Provider contracts | LOW | SEC metadata contracts remain usable offline while SEC Live stays conditional; Tushare parser/planner contracts remain offline-only and production-blocked. Neither contract promotes fixture execution to Live. | SEC and Tushare contract/planner/fixture suites plus Task 73 company acceptance passed; descriptors report `CONDITIONAL` or `BLOCKED` and `NOT_ATTEMPTED`. | `src/stock_research_agent/providers/sec_edgar`, `src/stock_research_agent/providers/tushare`, contract tests | Preserve exact version, scope, as-of, budget, and offline markers. No production enablement is authorized. | NO | VERIFIED |
+| S9-R1-005 | Licensing and compliance | LOW | License decisions fail closed and distinguish acquisition, raw storage, cache, derived use, redistribution, retention, and attribution. Real-company acceptance does not infer rights from public visibility. | License-policy unit tests and sample validation documents record restricted or blocked rights; no Live run exists. | `src/stock_research_agent/domain/providers/licenses.py`, `docs/compliance-boundaries.md`, sample validation documents | Keep SEC conditional and Tushare/disclosure/EOD/Embedding blocked until explicit terms and authorization exist. | NO | VERIFIED |
+| S9-R1-006 | HTTP and security | MEDIUM | The controlled HTTP layer validates exact HTTPS policies, DNS/IP safety, redirect targets, response bounds, deadlines, headers, redaction, rate limits, retries, and circuit state. Default execution remains hard-blocked before transport. Live SSRF behavior was not exercised because Live is unauthorized. | HTTP, SSRF, redirect, response-bound, redaction, and executor offline tests; source scan found no automatic production client construction. | `src/stock_research_agent/providers/http_client.py`, `http_policy.py`, `http_executor.py`, security tests | Retain fail-closed defaults and require a separately authorized finite Live test before claiming production transport validation. | NO | VERIFIED OFFLINE |
+| S9-R1-007 | Operations | MEDIUM | Sync lifecycle, checkpoint CAS, budgets, circuit state, dead letters, quality issues, cache, and explicit CLI controls are implemented offline. Actual Provider scheduling, production credentials, Live health probes, and repair executors remain unavailable. | Repository/CLI PostgreSQL tests and control code: `sync-run` and `repair` return explicit `BLOCKED`; `live-check` returns `NOT_ATTEMPTED`. | Provider control plane, CLI, operations documentation | Keep unavailable operational paths blocked; do not create fake Live Validation Runs or retry until a later explicit authorization. | NO | ACCEPTED LIMITATION |
+| S9-R1-008 | API, Tool, and CLI | MEDIUM | The approved GET API, ten read-only Tools, and bounded CLI query surface are present and do not trigger refresh, Snapshot creation, Agent execution, Report generation, or network access. Their readiness projection originally inherited S9-R1-001. | API/Tool/CLI contract tests and registry checksum tests; all registered Provider Tools are `READ_ONLY`, `writes=false`, `requires_network=false`; the shared readiness repository now returns health-backed status and limiting reasons. | `src/stock_research_agent/api/routes/providers.py`, `src/stock_research_agent/tools/providers.py`, `src/stock_research_agent/cli_providers.py` | Kept the read-only surface and corrected only the shared readiness repository/result contract under S9-R1-001. | NO | FIXED |
+| S9-R1-009 | Fixtures and testing | LOW | SEC evidence is a source-attributed offline metadata crop with no body and no retained financial facts. The Tushare fixture is an empty neutral synthetic protocol envelope. No synthetic value is accepted for Industrial FII or Micron. The first combined Stage 9 run also exposed a repository test that incorrectly assumed the shared test database contained no independently scoped concurrency records. | LF/checksum manifest tests and Task 73 passed. Combined RED: 646/647 passed and the global-empty list assertion failed on a valid `CAS_*` row. The corrected assertion scopes identity to `TEST_PROVIDER` while still exercising the real bounded list. | `tests/fixtures/providers`, `tests/integration/test_stage9_company_acceptance.py`, `tests/integration/test_provider_governance_repository_postgres.py`, sample validation documents | Preserved fixture isolation and replaced the invalid global-empty assumption with an exact Provider identity assertion; no production behavior or concurrency coverage changed. | NO | FIXED |
+| S9-R1-010 | Fixtures and testing | HIGH | The first near-full Stage 9 regression collected 2527 tests and exposed six stale Stage 2–8 integration contracts: migration table/downgrade expectations stopped at Stage 8, the safe configuration summary omitted the new network mode, the environment contract omitted `PROVIDER_NETWORK_MODE`, the explicit module allowlist omitted eleven reviewed Stage 9 modules, the repository export contract omitted Stage 9 repositories, and AGENTS no longer contained the preserved Research Run read-only sentence. | RED: 2521 passed and 6 failed in 388.45 seconds. GREEN: the exact six failing node IDs pass together (6 passed in 7.14 seconds), including real PostgreSQL upgrade/downgrade/re-upgrade. | `tests/integration/test_migrations.py`, `tests/unit/test_config.py`, `tests/unit/test_data_access_queries.py`, `tests/unit/test_module_boundaries.py`, `tests/unit/test_stage4_documentation.py`, `.env.example`, `docs/configuration.md`, `AGENTS.md`, `src/stock_research_agent/db/repositories/__init__.py` | Extended exact historical manifests and exports without weakening equality checks; documented the explicit offline network mode; preserved the Stage 4–8 read-only wording; verified all six original failures in one foreground process. | YES | FIXED |
+
+## Database evidence
+
+- The ORM and `migrations/versions/0008_create_production_data_providers.py`
+  define all 20 reviewed Stage 9 tables without modifying Stage 2–8 tables.
+- Task 73 used the isolated test database through loopback-only real PostgreSQL;
+  `get_readiness_view` now reads the latest persisted health observation.
+  Both real Security IDs produced safe persisted query results while counts for
+  `DataSnapshot`, `ResearchAgentRun`, and `ResearchReport` remained unchanged.
+- Migration inspection found and fixed the exact state-vocabulary mismatch in
+  `ck_provider_health_snapshots_states`; real PostgreSQL now confirms that
+  `trg_provider_health_snapshots_immutable` exists and rejects UPDATE and DELETE.
+- Migration replay is deferred to the final acceptance task after every blocking
+  finding is fixed.
+
+## Round-one gate
+
+Unresolved `CRITICAL`: 0
+Unresolved `HIGH`: 0
+
+S9-R1-001, S9-R1-002, S9-R1-003, and S9-R1-010 each have focused failing
+regressions, minimal fixes, and passing verification. Round 2 may now recheck the
+fixes. No Live validation, main merge, or Stage 10 work is authorized.

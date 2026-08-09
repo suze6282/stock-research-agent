@@ -1,0 +1,53 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.superpowers/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+coverage/
+htmlcov/
+.coverage
+
+# Editors and operating-system metadata.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local logs, temporary files, and generated runtime state.
+logs/
+tmp/
+temp/
+*.log
+*.pid
+
+# Local databases and PostgreSQL clusters/backups.
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+*.bak
+pgdata/
+postgres_data/
+
+# Local Provider data, runtime blobs, caches, and credentials.
+artifacts/
+raw_data/
+provider_data/
+provider_cache/
+blobs/
+credentials/
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx

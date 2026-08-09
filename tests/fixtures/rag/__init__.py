@@ -1,0 +1,1 @@
+"""Synthetic RAG contract fixtures."""

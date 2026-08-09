@@ -1,0 +1,20 @@
+{
+  "fixture_status": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "OFFLINE",
+    "NOT_LIVE"
+  ],
+  "security": {
+    "name": "Neutral Synthetic Security",
+    "symbol": "SYNTH-001"
+  },
+  "fact": {
+    "as_of_time": "2026-07-13T00:00:00Z",
+    "currency_code": "USD",
+    "period": "FY2025",
+    "statement_code": "REVENUE",
+    "unit": "USD",
+    "value": "100.00"
+  }
+}

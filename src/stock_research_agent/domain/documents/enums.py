@@ -1,0 +1,71 @@
+"""Closed vocabularies for immutable document evidence."""
+
+from enum import StrEnum
+
+
+class DocumentLanguage(StrEnum):
+    ZH_CN = "zh-CN"
+    EN_US = "en-US"
+    MIXED = "MIXED"
+    UNKNOWN = "UNKNOWN"
+
+
+class TrustLevel(StrEnum):
+    OFFICIAL_REGULATORY = "OFFICIAL_REGULATORY"
+    OFFICIAL_COMPANY = "OFFICIAL_COMPANY"
+    APPROVED_PROVIDER = "APPROVED_PROVIDER"
+    TEST_FIXTURE = "TEST_FIXTURE"
+    UNKNOWN = "UNKNOWN"
+
+
+class SourceVersionStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    WITHDRAWN = "WITHDRAWN"
+    UNKNOWN = "UNKNOWN"
+
+
+class ParseStatus(StrEnum):
+    RUNNING = "RUNNING"
+    PASS = "PASS"
+    PARTIAL = "PARTIAL"
+    BLOCKED = "BLOCKED"
+    FAIL = "FAIL"
+
+
+class PageStatus(StrEnum):
+    PASS = "PASS"
+    BLANK = "BLANK"
+    NO_TEXT = "NO_TEXT"
+    PARTIAL = "PARTIAL"
+
+
+class LocatorType(StrEnum):
+    PDF_PAGE_RANGE = "PDF_PAGE_RANGE"
+    HTML_ANCHOR_RANGE = "HTML_ANCHOR_RANGE"
+    TEXT_OFFSET_RANGE = "TEXT_OFFSET_RANGE"
+    JSON_POINTER = "JSON_POINTER"
+    SECTION_RANGE = "SECTION_RANGE"
+
+
+class CitationStatus(StrEnum):
+    VALID = "VALID"
+    INVALID = "INVALID"
+    STALE_REFERENCE = "STALE_REFERENCE"
+    FUTURE_DATA = "FUTURE_DATA"
+    SOURCE_MISSING = "SOURCE_MISSING"
+    PARSE_VERSION_MISMATCH = "PARSE_VERSION_MISMATCH"
+
+
+class ContentKind(StrEnum):
+    TEXT = "TEXT"
+    HEADING = "HEADING"
+    TABLE = "TABLE"
+    JSON = "JSON"
+
+
+class SafetyMarker(StrEnum):
+    PROMPT_INJECTION_CANDIDATE = "PROMPT_INJECTION_CANDIDATE"
+    SYSTEM_PROMPT_IMITATION = "SYSTEM_PROMPT_IMITATION"
+    CREDENTIAL_REQUEST = "CREDENTIAL_REQUEST"
+    TOOL_INVOCATION_TEXT = "TOOL_INVOCATION_TEXT"
+    EXFILTRATION_URL = "EXFILTRATION_URL"

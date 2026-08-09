@@ -1,0 +1,46 @@
+{
+  "fixture_schema_version": "1.0.0",
+  "payload_filename": "tstx_sec_public.json",
+  "provider": "SEC_EDGAR_PUBLIC_V1",
+  "source_url": "https://example.invalid/synthetic/sec-submissions",
+  "source_endpoint_type": "SYNTHETIC_SEC_SUBMISSIONS_SCHEMA",
+  "security": "TSTX",
+  "captured_at": {
+    "date": "2026-01-16",
+    "precision": "DAY",
+    "timezone": "Asia/Shanghai",
+    "evidence_note": "This project-authored synthetic fixture was fixed for public contract tests."
+  },
+  "source_published_at": null,
+  "content_type": "application/json",
+  "original_response_cropped": false,
+  "full_response_bytes_retained": false,
+  "crop_rules": [
+    "No SEC response or filing body exists; every identity and filing record is synthetic.",
+    "Only the minimal submissions-metadata schema needed by tests is represented."
+  ],
+  "payload_byte_size": 631,
+  "checksum": {
+    "algorithm": "SHA-256",
+    "value": "502f30807726be7ed4f09acb6f8e598cd4c5336d805e6c81c82be86209d24350"
+  },
+  "authorization_use_restrictions": [
+    "Project-authored test asset only; prohibited as company or SEC evidence.",
+    "No SEC response, filing text, issuer fact, or production access is represented."
+  ],
+  "production_live_qualification": "SYNTHETIC_TEST_ONLY; NOT_COMPANY_EVIDENCE; NOT_PROVIDER_DATA; OFFLINE; NOT_LIVE.",
+  "data_origin": "FIXTURE",
+  "access_mode": "OFFLINE",
+  "live_status": "NOT_LIVE",
+  "synthetic": true,
+  "test_only": true,
+  "company_evidence": false,
+  "live": false,
+  "markers": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "NOT_PROVIDER_DATA",
+    "OFFLINE",
+    "NOT_LIVE"
+  ]
+}
