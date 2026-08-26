@@ -134,6 +134,10 @@ def _validate_result(value: object, context: ControlledRunContext) -> None:
         _validate_result(value.model_dump(mode="python"), context)
         return
     if isinstance(value, Mapping):
+        exact_snapshot_scope = (
+            value.get("snapshot_id") == context.snapshot_id
+            and value.get("research_as_of_time") is None
+        )
         for raw_key, item in value.items():
             key = str(raw_key)
             if key == "security_id" and item != context.security_id:
@@ -144,7 +148,11 @@ def _validate_result(value: object, context: ControlledRunContext) -> None:
                 _reject("RUN_SCOPE_MISMATCH")
             if key == "research_request_id" and item != context.research_request_id:
                 _reject("REQUEST_SCOPE_MISMATCH")
-            if key == "research_as_of_time" and item != context.research_as_of_time:
+            if (
+                key == "research_as_of_time"
+                and item != context.research_as_of_time
+                and not exact_snapshot_scope
+            ):
                 _reject("AS_OF_SCOPE_MISMATCH")
             if key == "published_at" and isinstance(item, datetime):
                 if item > context.research_as_of_time:

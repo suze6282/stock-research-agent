@@ -119,6 +119,23 @@ _STAGE_9_TABLES = {
     "provider_audit_events",
     "provider_live_validation_runs",
 }
+_STAGE_10_TABLES = {
+    "live_authorization_grants",
+    "live_authorization_events",
+    "live_authorization_consumptions",
+    "live_execution_approvals",
+    "manual_evidence_import_requests",
+    "manual_evidence_source_declarations",
+    "manual_evidence_validations",
+    "manual_evidence_reviews",
+    "evidence_ingestion_manifests",
+    "ingestion_to_snapshot_bindings",
+    "real_company_validation_runs",
+    "end_to_end_research_validations",
+    "evidence_retention_actions",
+    "live_incidents",
+    "live_incident_events",
+}
 _DROP_ORDER = (
     "normalized_fact_inputs",
     "calculation_inputs",
@@ -267,6 +284,7 @@ def test_upgrade_downgrade_and_second_upgrade_use_postgresql(
         | _STAGE_7_TABLES
         | _STAGE_8_TABLES
         | _STAGE_9_TABLES
+        | _STAGE_10_TABLES
     )
     columns = inspector.get_columns("schema_meta")
     assert [column["name"] for column in columns] == ["id", "schema_version", "applied_at"]
@@ -277,15 +295,32 @@ def test_upgrade_downgrade_and_second_upgrade_use_postgresql(
     assert columns[2]["type"].timezone is True
 
     command.downgrade(config, "-1")
-    tables_after_stage_9_downgrade = set(inspect(migration_database).get_table_names())
-    assert "schema_meta" in tables_after_stage_9_downgrade
-    assert _STAGE_3_TABLES <= tables_after_stage_9_downgrade
-    assert _STAGE_4_TABLES <= tables_after_stage_9_downgrade
-    assert _STAGE_5_TABLES <= tables_after_stage_9_downgrade
-    assert _STAGE_6_TABLES <= tables_after_stage_9_downgrade
-    assert _STAGE_7_TABLES <= tables_after_stage_9_downgrade
-    assert _STAGE_8_TABLES <= tables_after_stage_9_downgrade
-    assert not (_STAGE_9_TABLES & tables_after_stage_9_downgrade)
+    tables_after_attempt_capacity_downgrade = set(inspect(migration_database).get_table_names())
+    assert _STAGE_10_TABLES <= tables_after_attempt_capacity_downgrade
+
+    command.downgrade(config, "-1")
+    tables_after_lineage_integrity_downgrade = set(inspect(migration_database).get_table_names())
+    assert _STAGE_10_TABLES <= tables_after_lineage_integrity_downgrade
+
+    command.downgrade(config, "-1")
+    tables_after_component_lineage_downgrade = set(inspect(migration_database).get_table_names())
+    assert _STAGE_10_TABLES <= tables_after_component_lineage_downgrade
+
+    command.downgrade(config, "-1")
+    tables_after_request_contract_downgrade = set(inspect(migration_database).get_table_names())
+    assert _STAGE_10_TABLES <= tables_after_request_contract_downgrade
+
+    command.downgrade(config, "-1")
+    tables_after_stage_10_downgrade = set(inspect(migration_database).get_table_names())
+    assert "schema_meta" in tables_after_stage_10_downgrade
+    assert _STAGE_3_TABLES <= tables_after_stage_10_downgrade
+    assert _STAGE_4_TABLES <= tables_after_stage_10_downgrade
+    assert _STAGE_5_TABLES <= tables_after_stage_10_downgrade
+    assert _STAGE_6_TABLES <= tables_after_stage_10_downgrade
+    assert _STAGE_7_TABLES <= tables_after_stage_10_downgrade
+    assert _STAGE_8_TABLES <= tables_after_stage_10_downgrade
+    assert _STAGE_9_TABLES <= tables_after_stage_10_downgrade
+    assert not (_STAGE_10_TABLES & tables_after_stage_10_downgrade)
 
     command.upgrade(config, "head")
     assert _STAGE_3_TABLES <= set(inspect(migration_database).get_table_names())

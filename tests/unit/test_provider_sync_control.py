@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
+from pydantic import ValidationError
 
-from stock_research_agent.domain.providers.enums import ProviderRunStatus
+from stock_research_agent.domain.providers import sync as sync_contracts
+from stock_research_agent.domain.providers.enums import (
+    ProviderRunStatus,
+    ProviderSyncSliceStatus,
+)
 from stock_research_agent.domain.providers.sync import (
+    ProviderRequestAttemptWrite,
     ProviderRunTransition,
     ProviderSyncRunRecord,
 )
@@ -134,3 +140,35 @@ def test_control_rejects_cross_run_policy_plan_or_context_swap(field: str) -> No
     service = ProviderSyncControlService(repository, clock=lambda: NOW)
     with pytest.raises(ValueError, match="CONTEXT"):
         service.pause(_command(repository.run, **{field: uuid4()}))
+
+
+def test_attempt_reservation_and_settlement_contracts_are_frozen_and_bounded() -> None:
+    reservation_type = sync_contracts.ProviderRequestAttemptReservation
+    settlement_type = sync_contracts.ProviderRequestAttemptSettlement
+    attempt_id = UUID("80000000-0000-0000-0000-000000000001")
+    write = ProviderRequestAttemptWrite(
+        sync_run_id=uuid4(),
+        slice_id="SEC_SUBMISSIONS",
+        attempt_number=1,
+        status=ProviderSyncSliceStatus.PENDING,
+        endpoint_id="SEC_SUBMISSIONS_JSON",
+        response_status_code=None,
+        response_bytes=0,
+        started_at=NOW,
+    )
+
+    reservation = reservation_type(id=attempt_id, value=write)
+    settlement = settlement_type(
+        id=attempt_id,
+        status=ProviderSyncSliceStatus.COMPLETED,
+        response_status_code=200,
+        response_bytes=128,
+        completed_at=NOW,
+        safe_error_code=None,
+    )
+
+    assert reservation.id == settlement.id == attempt_id
+    with pytest.raises(ValidationError):
+        reservation.id = uuid4()
+    with pytest.raises(ValidationError):
+        settlement.status = ProviderSyncSliceStatus.PENDING

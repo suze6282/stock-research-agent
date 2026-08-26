@@ -87,6 +87,11 @@ class ProviderRawArtifactRecord(ProviderRawArtifactWrite):
     created_at: AwareUtcDateTime
 
 
+class ProviderRawArtifactReservation(FrozenProviderContract):
+    id: UUID
+    value: ProviderRawArtifactWrite
+
+
 class ProviderIngestionManifestWrite(FrozenProviderContract):
     raw_artifact_id: UUID
     sync_run_id: UUID

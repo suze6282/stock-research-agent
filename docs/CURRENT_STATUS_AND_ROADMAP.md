@@ -6,10 +6,9 @@
 
 | 范围 | 状态 | 当前事实 |
 |---|---|---|
-| Stable baseline | `main` at `d6368d5` | Stage 1–9 稳定文件树；Stage 9 离线工程结论为 `CONDITIONAL GO`。 |
-| Stage 9 branch | `stage-9/production-data-providers` at `74f3b23` | 独立开发历史保留；其文件树与 `main` 一致，但因 squash/聚合式合入而不是 `main` 的 ancestor。 |
-| Stage 10 branch | `stage-10/controlled-live-evidence` | Started / Work in Progress / Development Paused；未合入 `main`。 |
-| Stage 10 checkpoint | `db39858` | 本地 WIP 现场已保存；不代表完成或验收。 |
+| Engineering source baseline | `main` at `059a6ef` | Stage 1–9、Stage 10 Gate A，以及部分 Gate B engineering 的已审核源文件树。 |
+| Public history baseline | `main` at `a113bcba` | 独立的 sanitized public history；不包含 Engineering commit history。 |
+| Public update branch | `public-update/stage-10-gate-a-sync` | 本地、未提交、未推送的公开候选。 |
 
 提交短 ID 记录的是本次 GitHub 发布准备时的审计证据；后续提交不会改变这里描述的阶段
 结论，但公开前应再次核对分支 tip。
@@ -74,11 +73,12 @@ Git 证据和阶段文档显示：
 完成的是离线 Provider 治理工程，不是 Live 数据授权。`CONDITIONAL GO` 不得改写为
 `Production Ready`。
 
-## Work in Progress / Development Paused
+## Stage 10 Acceptance and Work in Progress
 
 ### Stage 10 — Controlled Live Evidence
 
-Stage 10 已实际开始，不能写 `Not Started`。当前暂停在独立分支，未合入 `main`。
+Stage 10 Offline Production Acceptance 与 Gate A 已完成；Gate B engineering 已开始，
+但只达到部分实现的 active engineering baseline。整个项目仍不是 Production Ready。
 
 已实现并提交/保存的方向包括：
 
@@ -90,19 +90,18 @@ Stage 10 已实际开始，不能写 `Not Started`。当前暂停在独立分支
 - PostgreSQL models、migration、integration/security/offline tests；
 - Reflection Round 1 及 CRITICAL/HIGH remediation。
 
-尚未完成：
+当前结论：
 
-- Task 78：Reflection Round 2；
-- Task 79：Stage 10 Implementation Report 和相关文档验收；
-- Task 80：Gate A full acceptance、全量命令证据与最终迁移循环；
-- Gate B：真实受控 Live Provider 验证。
+- Stage 10 Offline Production Acceptance：**Complete**；
+- Gate A：**Complete / `GATE_A_COMPLETE`**；
+- Gate B Engineering：**Partially Implemented / Active Engineering Baseline**；
+- Gate B Readiness：**`NO_GO`**；
+- Production Authorization：**`NOT AUTHORIZED`**；
+- Production Live Execution：**`NOT EXECUTED`**；
+- SEC Production Pilot：**Not complete / `NOT_EXECUTED`**；
+- Stage 11：**`NOT STARTED`**。
 
-因此 Stage 10 当前只能写：
-
-> **Started / Work in Progress / Development Paused**
-
-不得写 `Stage 10 Complete`、`GATE_A_COMPLETE`、`Production Ready` 或 `Live Evidence
-Complete`。
+不得写 `Gate B Complete`、`Production Ready` 或 `Live Evidence Complete`。
 
 ## Current Provider Blockers
 
@@ -131,21 +130,19 @@ Complete`。
 
 开发恢复后，按以下顺序处理：
 
-1. 在 `stage-10/controlled-live-evidence` 上重新确认 clean checkpoint 和计划；
-2. 完成 Task 78 Reflection Round 2；
-3. 完成 Task 79 Implementation Report 和状态文档；
-4. 完成 Task 80 全量 Ruff/format/mypy/pytest 与 PostgreSQL migration acceptance；
-5. 根据正式证据决定 Stage 10 Gate A 结论；
-6. 由用户单独决定是否合入 `main`；
-7. 对每个 Live Provider 进行独立授权、许可和有限预算审批。
+1. 解决 Gate B readiness review 中仍开放的阻塞项；
+2. 重新运行 offline quality、migration 与 readiness evidence；
+3. 对 SEC production pilot 单独披露有限范围并获取精确授权；
+4. 对每个 Live Provider 独立完成许可、Credential Reference、范围和预算审批；
+5. Gate B 未获得 GO 前不执行 Production Live；
+6. Stage 11 继续保持未开始。
 
 不提供虚假完成时间，也不因公开 GitHub 而把 WIP 合入稳定分支。
 
 ## Recommended GitHub Branch Strategy
 
-- `main`：GitHub 默认分支，展示 Stage 1–9 稳定基线；
-- `stage-9/production-data-providers`：可选公开，保留 Stage 9 逐任务开发历史；
-- `stage-10/controlled-live-evidence`：明确标记 WIP/paused，可选公开；
-- `docs/github-publication-prep`：仅用于人工审阅 GitHub 文档差异，不应替代 `main`。
+- `main`：GitHub 默认分支，只接收审核通过的 sanitized public candidate；
+- 内部 Engineering 分支与完整开发历史不导入 Public Repository；
+- `public-update/stage-10-gate-a-sync`：仅用于本轮本地人工审阅，不在 Phase 1 推送。
 
 任何 WIP 分支都不应为了仓库展示而自动合入 `main`。

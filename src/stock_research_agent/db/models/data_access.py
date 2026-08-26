@@ -362,6 +362,12 @@ class RawPayload(_ImmutableUuidMixin, Base):
             ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
+            ["manual_evidence_import_request_id"],
+            ["manual_evidence_import_requests.id"],
+            name="fk_raw_payloads_manual_evidence_import_request",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
             ["provider_id"],
             ["data_providers.id"],
             name="fk_raw_payloads_provider_id_data_providers",
@@ -401,6 +407,11 @@ class RawPayload(_ImmutableUuidMixin, Base):
             name="ck_raw_payloads_versions_length",
         ),
         CheckConstraint("byte_size >= 0", name="ck_raw_payloads_byte_size"),
+        CheckConstraint(
+            "(provider_request_log_id IS NOT NULL)::int + "
+            "(manual_evidence_import_request_id IS NOT NULL)::int = 1",
+            name="ck_raw_payloads_exactly_one_source",
+        ),
         Index("ix_raw_payloads_checksum", "checksum"),
         Index(
             "ix_raw_payloads_security_category_source_time",
@@ -411,7 +422,8 @@ class RawPayload(_ImmutableUuidMixin, Base):
     )
 
     ingestion_run_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
-    provider_request_log_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    provider_request_log_id: Mapped[UUID | None] = mapped_column(Uuid)
+    manual_evidence_import_request_id: Mapped[UUID | None] = mapped_column(Uuid)
     provider_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
     security_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
     category: Mapped[str] = mapped_column(String(32), nullable=False)

@@ -7,6 +7,13 @@ from decimal import Decimal
 from types import SimpleNamespace
 from uuid import UUID, uuid4
 
+from stock_research_agent.domain.research_agent.claim_pipeline import (
+    ProductionDeterministicClaimPipeline,
+)
+from stock_research_agent.domain.research_agent.claims import (
+    ClaimSupportValidator,
+    DeterministicClaimBuilder,
+)
 from stock_research_agent.domain.research_agent.enums import (
     ResearchMode,
     ResearchPackageStatus,
@@ -16,6 +23,10 @@ from stock_research_agent.domain.research_agent.enums import (
     ResearchStepType,
     ResearchType,
     ToolInvocationStatus,
+)
+from stock_research_agent.domain.research_agent.evidence import EvidenceLedgerService
+from stock_research_agent.domain.research_agent.evidence_adapters import (
+    ProductionObservationEvidenceAdapter,
 )
 from stock_research_agent.domain.research_agent.policies import (
     build_controlled_offline_policy,
@@ -137,6 +148,8 @@ class _Repository:
         self.steps = {step.id: step for step in steps}
         self.invocations: list[object] = []
         self.completions: list[tuple[UUID, object]] = []
+        self.observations: list[object] = []
+        self.evidence: list[object] = []
         self.packages: list[object] = []
 
     def get_plan(self, run_id: UUID) -> object:
@@ -177,7 +190,25 @@ class _Repository:
         return value
 
     def add_observation(self, value: object) -> object:
-        raise AssertionError("metadata-only registry must fail closed")
+        self.observations.append(value)
+        return value
+
+    def add_evidence(self, values: tuple[object, ...]) -> tuple[object, ...]:
+        self.evidence.extend(values)
+        return values
+
+    def list_evidence(self, run_id: UUID) -> tuple[object, ...]:
+        assert run_id == RUN_ID
+        return tuple(self.evidence)
+
+    def add_claim(self, value: object) -> object:
+        raise AssertionError("metadata-only registry cannot create Claims")
+
+    def add_links(self, values: tuple[object, ...]) -> tuple[object, ...]:
+        raise AssertionError("metadata-only registry cannot create Claim links")
+
+    def complete_claim(self, claim_id: UUID, value: object) -> object:
+        raise AssertionError("metadata-only registry cannot complete Claims")
 
     def add_package(self, value: object) -> object:
         self.packages.append(value)
@@ -208,6 +239,28 @@ class _State:
         return self.run
 
 
+class _Snapshots:
+    def get_snapshot(self, snapshot_id: UUID) -> None:
+        assert snapshot_id == SNAPSHOT_ID
+        return None
+
+
+class _SecurityMaster:
+    def __init__(self) -> None:
+        self.load_count = 0
+
+    def get_security(self, security_id: UUID) -> object | None:
+        assert security_id == SECURITY_ID
+        self.load_count += 1
+        if self.load_count > 1:
+            return None
+        return SimpleNamespace(
+            security=SimpleNamespace(id=SECURITY_ID, symbol="MU"),
+            issuer=SimpleNamespace(id=UUID(int=1), legal_name="Micron Technology, Inc."),
+            exchange=SimpleNamespace(mic="XNAS"),
+        )
+
+
 def test_production_execution_pipeline_runs_fixed_tools_and_fails_closed() -> None:
     module_name = "stock_research_agent.domain.research_agent.application"
     assert importlib.util.find_spec(module_name) is not None
@@ -216,10 +269,24 @@ def test_production_execution_pipeline_runs_fixed_tools_and_fails_closed() -> No
     repository = _Repository(steps)
     repository.run = run
     state = _State(run)
+    security_master = _SecurityMaster()
     service = module.DeterministicResearchExecutionService(
         repository=repository,
         state_machine=state,
         registries=(create_tool_metadata_registry(),),
+        security_master=security_master,
+        evidence_adapter=ProductionObservationEvidenceAdapter(
+            snapshots=_Snapshots(),
+            ledger=EvidenceLedgerService(),
+            id_factory=uuid4,
+            clock=lambda: NOW,
+        ),
+        claim_pipeline=ProductionDeterministicClaimPipeline(
+            repository=repository,
+            builder=DeterministicClaimBuilder(id_factory=uuid4),
+            validator=ClaimSupportValidator(id_factory=uuid4),
+            clock=lambda: NOW,
+        ),
         id_factory=uuid4,
         clock=lambda: NOW,
     )
@@ -239,6 +306,9 @@ def test_production_execution_pipeline_runs_fixed_tools_and_fails_closed() -> No
     assert repository.completions[0][1].status is ToolInvocationStatus.FAIL
     assert repository.run.budget.consumed_tool_calls == 1
     assert repository.run.budget.consumed_model_tokens == 0
+    assert len(repository.observations) == 1
+    assert len(repository.evidence) == 1
+    assert security_master.load_count == 2
     assert all(
         step.status
         in {

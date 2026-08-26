@@ -4,6 +4,7 @@ import os
 import sys
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
+from uuid import UUID
 
 import pytest
 from alembic import command
@@ -20,6 +21,7 @@ from stock_research_agent.domain.providers.artifacts import (
     ProviderDeadLetterWrite,
     ProviderIngestionManifestWrite,
     ProviderIssueSeverity,
+    ProviderRawArtifactReservation,
     ProviderRawArtifactWrite,
 )
 from stock_research_agent.domain.providers.enums import (
@@ -192,3 +194,36 @@ def test_artifact_repository_is_idempotent_and_preserves_lineage(
     assert issue.manifest_id == manifest.id
     assert dead_letter.manifest_id == manifest.id
     assert session.in_transaction()
+
+
+def test_artifact_repository_accepts_preallocated_identity_and_conflicts_closed(
+    session: Session,
+) -> None:
+    definition, capability, license_policy, run, attempt = _lineage(session)
+    repository = SqlAlchemyProviderArtifactRepository(session)
+    artifact_id = UUID("82000000-0000-0000-0000-000000000099")
+    value = ProviderRawArtifactWrite(
+        provider_definition_id=definition.id,
+        provider_capability_id=capability.id,
+        sync_run_id=run.id,
+        request_attempt_id=attempt.id,
+        license_policy_id=license_policy.id,
+        source_identity="fixture/preallocated.json",
+        source_checksum="a" * 64,
+        byte_count=16,
+        content_type="application/json",
+        blob_key="provider/preallocated/a.json",
+        acquired_at=datetime(2026, 7, 29, tzinfo=UTC),
+        source_published_at=None,
+        synthetic_status=ProviderSyntheticStatus.SYNTHETIC_TEST_ONLY,
+    )
+    reservation = ProviderRawArtifactReservation(id=artifact_id, value=value)
+
+    assert repository.add_artifact_with_id(reservation).id == artifact_id
+    assert repository.add_artifact_with_id(reservation).id == artifact_id
+    with pytest.raises(ValueError, match="PROVIDER_ARTIFACT_CONFLICT"):
+        repository.add_artifact_with_id(
+            reservation.model_copy(
+                update={"value": value.model_copy(update={"source_checksum": "b" * 64})}
+            )
+        )

@@ -161,5 +161,19 @@ or control parameters return 422, missing resources return a safe 404, and
 Provider `POST` sync/live-check/repair/credential routes are forbidden, as are
 PUT, PATCH and DELETE. GET never probes, syncs, repairs, downloads or returns raw
 payloads, headers, secrets, local storage paths, connection strings or SQL. A
-persisted business `BLOCKED` state remains HTTP 200 data. Stage 9 is
-`CONDITIONAL GO`; this API does not authorize Stage 10.
+persisted business `BLOCKED` state remains HTTP 200 data.
+
+# Stage 10 Gate A GET-only API
+
+The `/api/v1/live-evidence` prefix exposes ten GET-only projections for finite
+authorizations, authorization events/consumptions, execution approvals, manual
+imports, ingestion manifests, validation runs/checks, incidents and incident
+events. Singular resources use exact row IDs; list resources use their approved
+parent ID plus bounded, stable `limit`/`offset` ordering.
+
+All corresponding Tools are `READ_ONLY`, `writes=false`, and
+`requires_network=false`. API and Tools cannot create or activate a Grant, run SEC,
+read a Credential, import a file, create a Snapshot, execute Agent/Report work, or
+trigger a refresh. Missing rows return safe 404, invalid input returns 422, and
+responses exclude SQL, connection strings, local paths, secrets, restricted bytes
+and unbounded payloads. No Stage 10 POST/PUT/PATCH/DELETE route exists.

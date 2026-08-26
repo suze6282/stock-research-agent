@@ -170,3 +170,27 @@ def test_output_scope_must_match_run_context(
         tool_context.validate_output_scope(_context(), result)
 
     assert raised.value.code == code
+
+
+def test_exact_snapshot_output_may_omit_as_of_when_snapshot_scope_matches() -> None:
+    tool_context = _module()
+
+    tool_context.validate_output_scope(
+        _context(),
+        {
+            "snapshot_id": SNAPSHOT_ID,
+            "research_as_of_time": None,
+        },
+    )
+
+
+def test_missing_as_of_without_matching_snapshot_scope_is_rejected() -> None:
+    tool_context = _module()
+
+    with pytest.raises(tool_context.ResearchToolContextError) as raised:
+        tool_context.validate_output_scope(
+            _context(),
+            {"research_as_of_time": None},
+        )
+
+    assert raised.value.code == "AS_OF_SCOPE_MISMATCH"

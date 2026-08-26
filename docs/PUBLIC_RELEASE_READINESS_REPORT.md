@@ -1,183 +1,174 @@
 # Public Release Readiness Report
 
-## Decision
+## 1. Isolation and source state
 
-**Safe to upload: YES**
+- Source Engineering repository: preserved read-only at `main@059a6ef`.
+- Observed Engineering working branch/HEAD: unchanged at
+  `fix/stage-10-e2e-003-production-identity-wiring@3854e517` with a clean working tree.
+- Public baseline: `a113bcbae38bdb2c5ad36e972a6ae2744f2126d3`.
+- Public update branch: `public-update/stage-10-gate-a-sync`.
+- Public candidate parent: `a113bcbae38bdb2c5ad36e972a6ae2744f2126d3`.
+- Engineering Git history included: **NO**.
+- Engineering commits imported: **0**.
+- Public candidate commit created: **NO**.
+- Push or GitHub mutation performed: **NO**.
 
-The Public Export is a self-contained, sanitized engineering repository. It contains no
-Git history, confirmed Secret, Credential, personal path, database file, Raw Provider
-Artifact, source-derived SEC/SSE/Nasdaq Fixture, or file over 100 MB. Its complete public
-test suite and all static quality gates pass. This decision authorizes only proceeding to
-a separately approved GitHub upload step; no repository, remote, push, or pull request
-was created here.
+## 2. Classification and synchronization
 
-## 1. Source repository status
+The baseline comparison covered 307 changed paths:
 
-- Source documentation branch: `docs/github-publication-prep`
-- Source documentation HEAD: `57feb564d3d39e00ea89ab02cee23d356682ebcc`
-- `main`: `d6368d598e714382f9ce419da8fb760d15ddc362`, unchanged
-- `stage-9/production-data-providers`:
-  `74f3b23fa5552571b414ca86c932ea135f885233`, preserved
-- `stage-10/controlled-live-evidence`:
-  `db398589f04647dc8230eaf0095e09773f169ed0`, preserved
-- Stage 10 WIP checkpoint: `wip: checkpoint stage 10 controlled live evidence`
-- No source branch was deleted, merged, rebased, reset, or history-rewritten.
+| Classification | Count |
+|---|---:|
+| PUBLIC | 213 |
+| SANITIZE | 65 |
+| EXCLUDE | 11 |
+| PRESERVE_PUBLIC_VERSION | 18 |
+| REVIEW_REQUIRED | 0 |
 
-## 2. Public Export status
+Final candidate state relative to both source trees:
 
-- Public content files after generated-file cleanup: **715**
-- Ordinary directory with no `.git`: **confirmed**
-- Git history included: **NO**
-- Historical personal paths included: **NO**
-- Business logic changes: **NO**
-- Public-only changes are Fixture/test-asset governance, documentation, and publication
-  configuration.
+- 235 compared files equal the Engineering baseline;
+- 27 preserve the existing Public version;
+- 33 are sanitized or merged Public variants;
+- 11 Engineering files are excluded;
+- one stale Public readiness report was removed;
+- `THIRD_PARTY_NOTICES.md` was added.
 
-## 3. Secret and Credential scan
+## 3. Provider and Fixture boundary
 
-- Confirmed Secrets: **0**
-- Confirmed Credentials: **0**
-- Credential files: **0**
-- Unauthorized `.env` files: **0**; only `.env.example` is retained
-- Private keys: **0**
-- High-entropy API/GitHub/cloud tokens: **0**
+The following source-derived assets are not present:
 
-Lexical matches were reviewed. They are scan terms, deliberately redacted test strings,
-Credential policy source modules, or explicit local-only fake configuration. No value
-from a real Credential was read or retained.
+- SSE source-derived Fixture: **0**;
+- Nasdaq source-derived Fixture: **0**;
+- SEC source-derived Fixture: **0**;
+- licensed dataset: **0**;
+- Raw production Provider artifact: **0**.
 
-## 4. Privacy and local-path scan
+The existing project-authored Public Synthetic Fixtures remain in place. Stage 10 adds
+three project-authored parser-security assets (minimal PDF, HTML, and duplicate-key JSON)
+with a fixed manifest. Public Fixture assets are LF-only and are marked
+`SYNTHETIC_TEST_ONLY`, `NOT_COMPANY_EVIDENCE`, `NOT_PROVIDER_DATA`, `OFFLINE`, and
+`NOT_LIVE`. They are not company evidence or proof of Live support.
 
-- Real personal paths: **0**
-- Real usernames: **0**
-- Source/export absolute paths: **0**
+## 4. Safety scan
 
-Generic checklist patterns such as `C:\Users\` remain solely as instructions for future
-release reviewers; they do not identify a person or machine.
+| Check | Result |
+|---|---:|
+| Real Secrets | 0 |
+| Real Credentials | 0 |
+| Personal absolute paths | 0 |
+| Personal email addresses | 0 |
+| Private machine hostnames | 0 |
+| Private `.env` files | 0 |
+| Database/dump/backup files | 0 |
+| Runtime blobs or Provider caches | 0 |
+| Raw Provider artifacts | 0 |
+| Restricted source-derived Fixtures | 0 |
+| Files larger than 10 MiB | 0 |
+| Files larger than 50 MiB | 0 |
+| Files larger than 100 MiB | 0 |
+| Tracked cache/build/log/temp artifacts | 0 |
 
-## 5. Database, Raw Artifact, and generated-file scan
+Keyword matches were reviewed as local-development placeholders, `.example` test URLs,
+redaction sentinels, or security tests. The only high-confidence-shaped Bearer match is a
+test sentinel used to verify redaction; it is not a Credential.
 
-- Database/dump/backup files: **0**
-- PostgreSQL data directories in the export: **0**
-- Raw Provider Artifacts: **0**
-- Provider response caches: **0**
-- Logs and temporary downloads: **0**
-- Virtual environments, pytest/mypy/Ruff caches, `__pycache__`, and temporary JUnit
-  output: removed after verification
+## 5. Documentation and License
 
-Source modules and synthetic tests for Blob, cache, and Credential boundaries are code,
-not captured runtime data.
+- README: **UPDATED** for Stage 10 Gate A and partial Gate B engineering.
+- Project Introduction: **UPDATED**.
+- Project Manual: **UPDATED**, including migration head `0013` and current CLI/API groups.
+- User Guide: **UPDATED**.
+- Current Status & Roadmap: **UPDATED**.
+- GitHub Upload Checklist: **UPDATED**.
+- Public Fixture Replacement Matrix: **UPDATED**.
+- Other safe Engineering design/acceptance documents: **PRESERVED or SANITIZED**.
+- Markdown files: 164.
+- Broken relative Markdown links: 0.
 
-## 6. Large-file scan
+License policy remains **PROPRIETARY / NO OPEN-SOURCE LICENSE GRANTED**.
+`LICENSE.md`, the README License section, `pyproject.toml` license metadata, and
+`THIRD_PARTY_NOTICES.md` are consistent. No MIT, Apache, GPL, BSD, or other open-source
+license was added.
 
-- Files over 10 MB: **0**
-- Files over 50 MB: **0**
-- Files over 100 MB: **0**
-- Git LFS installed or configured: **NO**
+## 6. Current project status
 
-## 7. SEC Fixture treatment
+| Scope | Status |
+|---|---|
+| Stages 1–8 | COMPLETED |
+| Stage 9 | COMPLETED / CONDITIONAL GO |
+| Stage 10 Offline Production Acceptance | COMPLETE |
+| Stage 10 Gate A | COMPLETE / `GATE_A_COMPLETE` |
+| Gate B Engineering | PARTIALLY IMPLEMENTED / ACTIVE ENGINEERING BASELINE |
+| Gate B Readiness | `NO_GO` |
+| Production Authorization | `NOT AUTHORIZED` |
+| Production Live Execution | `NOT EXECUTED` |
+| SEC Production Pilot | NOT COMPLETE / `NOT_EXECUTED` |
+| Stage 11 | `NOT STARTED` |
 
-- Source-derived SEC Fixture included: **NO**
-- Real filing body included: **NO**
-- Public replacement: `tstx_sec_public`
+## 7. Validation
 
-The replacement uses the fictitious Example Semiconductor Research Corp., test-only CIK
-`0000000000`, three invented filing-metadata rows, and one project-authored parser notice.
-It contains no real filing paragraph or company fact.
+- `uv sync --frozen --all-groups`: **PASS**.
+- `git diff --check`: **PASS**; Windows LF/CRLF conversion notices are not content errors.
+- Ruff: **PASS**.
+- Ruff format check: **PASS**.
+- mypy: **PASS**, 292 source files.
+- pytest collection: 3,238 tests.
+- combined verified: 3,238 passed, 0 skipped, 0 assertion failures, 0 errors,
+  0 warnings.
 
-## 8. SSE and Nasdaq Fixture treatment
+Phase 2 created a completely disposable PostgreSQL 17 cluster bound only to
+`127.0.0.1:55432`, with a temporary admin role and no production or operational data.
+This allowed the 11 migration-safety tests that previously lacked `CREATE DATABASE`
+privilege to execute: 11 passed. The full suite then passed in the same isolated test
+environment. The cluster was stopped after testing and the loopback port was confirmed
+closed. No existing application role was elevated.
 
-- Source-derived SSE Fixture included: **NO**
-- Source-derived Nasdaq Fixture included: **NO**
-- Public replacements: `test001_sse_public` and `tstx_nasdaq_public`
+- External production network calls: 0.
+- Production Provider calls: 0.
+- Gate B authorization: NO.
+- Gate B execution: NO.
+- Stage 11 execution: NO.
 
-Each replacement contains one invented OHLCV row with simple round values and a
-fictitious security. It is not exchange data, licensed market data, or company evidence.
+## 8. Phase 2 risk review
 
-## 9. Public Synthetic Fixture status
+- Baseline integrity: **PASS**; Public HEAD and `origin/main` remain
+  `a113bcbae38bdb2c5ad36e972a6ae2744f2126d3`.
+- Critical-risk findings: **0**.
+- High-risk review: authorization, Gate B orchestration, SEC transport, artifact/audit
+  boundaries, runtime storage, and all five migrations were reviewed.
+- Authorization defaults: **FAIL CLOSED**. The default Public CLI has no configured Live
+  authorization persistence operation and no configured SEC transport.
+- SEC request identity: reference-only in persisted contracts; the value is resolved only
+  at execution time from `SEC_EDGAR_CONTACT_IDENTITY` and is not printable contract data.
+- Alembic: one head, `0013_gate_b_attempt_number_capacity`; competing heads: 0.
+- Migration safety: no hardcoded database, host, role, machine path, or credential. Data
+  backfills and downgrade guards stop on incompatible state rather than discard it.
+- Trackable Fixture paths: 35, comprising 28 data assets and 7 Python Fixture helpers.
+  All 28 data assets are project-authored Synthetic test assets. Source-derived, real
+  Provider, and unknown-provenance assets: 0. The Stage 10 PDF/HTML/JSON sizes and fixed
+  SHA-256 checksums match their manifest.
+- Documentation: product, architecture, design, acceptance, roadmap, testing, and
+  security-boundary documents were retained. Temporary `.superpowers/sdd` task reports
+  remain excluded; the stale pre-sanitization GitHub readiness report remains removed.
+- Public status claims: **CONSISTENT**. Gate B remains `NO_GO`, Production Authorization
+  is `NOT AUTHORIZED`, Production Live Execution is `NOT EXECUTED`, and Stage 11 is
+  `NOT STARTED`.
+- License and third-party boundary: **PASS**. The repository remains proprietary with no
+  open-source license granted, and `THIRD_PARTY_NOTICES.md` grants no data redistribution
+  rights.
 
-There are **4 logical public Synthetic Fixture sets**: three new SEC/SSE/Nasdaq
-replacements and the retained Tushare synthetic protocol envelope. Five payload/manifest
-pairs exist on disk because the SEC asset has an independent test golden copy as well as
-the package resource. All pairs have fixed SHA-256 and byte counts.
+## 9. Remaining blockers and decision
 
-Every public Fixture is offline/test-only and carries the applicable boundary markers.
-The new replacement payloads have **0 CRLF occurrences** and are governed by the existing
-Fixture `text eol=lf` rules. Golden hashes are independently fixed rather than generated
-by the implementation under test.
+Product/runtime blockers remain unchanged: Gate B readiness is `NO_GO`, production
+authorization has not been granted, production Live execution has not occurred, and
+Stage 11 has not started. These are product/runtime boundaries, not blockers to a local
+Public Release Candidate commit that preserves those claims.
 
-## 10. Fixture Replacement Matrix
+Phase 2 found no remaining code, data, privacy, provenance, migration, documentation, or
+license blocker to local commit review.
 
-Present: [Public Fixture Replacement Matrix](PUBLIC_FIXTURE_REPLACEMENT_MATRIX.md).
+**Readiness decision: `READY_FOR_PUBLIC_COMMIT = YES`.**
 
-It maps each of the original 13 failing tests to the excluded source type, Synthetic
-replacement, preserved behavior, preserved assertion, and remaining limitation. No test
-was skipped, xfailed, deleted, or weakened.
-
-## 11. Tushare Fixture status
-
-The retained Tushare asset is a project-authored empty protocol envelope. It contains no
-Credential, licensed response, endpoint access, company evidence, or production data.
-
-## 12. README and documentation status
-
-- README: present; Stage, safety, Fixture, trading, and License boundaries verified
-- Publication Markdown files: **131**
-- Checked relative Markdown links: **18**
-- Broken relative Markdown links: **0**
-- Quick Start does not present public Synthetic Fixtures as stable seed or Live data
-
-## 13. License status
-
-**PROPRIETARY / NO OPEN-SOURCE LICENSE GRANTED.** `LICENSE.md` states all rights reserved
-and permits public viewing/evaluation only. README carries the same boundary. No MIT,
-Apache, GPL, BSD, or other open-source license was added. Third-party data rights remain
-separate.
-
-## 14. Quality gates
-
-- `uv sync --frozen --all-groups`: **PASS**; 54 packages checked
-- `uv run ruff check .`: **PASS**
-- `uv run ruff format --check .`: **PASS**; 540 files formatted
-- `uv run mypy src`: **PASS**; no issues in 248 source files
-- `uv run pytest -W error`: **PASS**
-- pytest collected: **2,537**
-- pytest passed: **2,537**
-- pytest failed: **0**
-- pytest errors: **0**
-- pytest skipped: **0**
-- pytest warnings: **0**
-- Full-suite duration: **441.18 seconds**
-
-The complete suite used the isolated loopback PostgreSQL test database. An earlier run
-found one README contract omission; after the accurate Stage 4 boundary text was restored,
-the complete suite passed. No business behavior was changed to obtain this result.
-
-## 15. Development status
-
-- Stage 1–8: **Completed**
-- Stage 9: **Completed / Conditional Go**; offline governance completion does not mean
-  full Live Provider approval or Production Ready
-- Stage 10: **Started / Work in Progress / Development Paused**; Tasks 78–80 and final
-  Gate A acceptance remain incomplete and it is not merged into `main`
-
-## 16. Remaining blockers
-
-**No blocker remains for uploading this sanitized Public Export as a publicly viewable,
-proprietary portfolio repository.**
-
-The following are post-upload or future-development decisions, not blockers to this
-sanitized release:
-
-- choose a formal open-source license only if broader reuse rights are intended;
-- complete Stage 10 acceptance before ever describing it as complete;
-- obtain separate Provider licenses/authorizations before any Live integration;
-- keep excluded source-derived Fixtures out unless redistribution is independently
-  approved.
-
-## 17. Safe to upload
-
-**YES.** The stated safety, Fixture, test, documentation, size, and License gates are
-satisfied. This report does not create permission to publish third-party data, execute
-trades, or call a Live Provider. No `git init`, remote configuration, GitHub repository,
-push, pull request, tag, or release was performed.
+Next permitted action after explicit approval: **Phase 3 — Create Public Release
+Candidate Commit**. Phase 2 performs no staging, commit, push, PR, or GitHub mutation.

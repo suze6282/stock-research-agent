@@ -535,7 +535,8 @@ class ProviderRequestLogRecord(ProviderRequestLogWrite):
 
 class RawPayloadWrite(DataAccessModel):
     ingestion_run_id: UUID
-    provider_request_log_id: UUID
+    provider_request_log_id: UUID | None = None
+    manual_evidence_import_request_id: UUID | None = None
     provider_id: UUID
     security_id: UUID
     category: DataCategory
@@ -556,6 +557,10 @@ class RawPayloadWrite(DataAccessModel):
 
     @model_validator(mode="after")
     def validate_storage_shape(self) -> Self:
+        provider_source_missing = self.provider_request_log_id is None
+        manual_source_missing = self.manual_evidence_import_request_id is None
+        if provider_source_missing == manual_source_missing:
+            raise ValueError("exactly one raw payload source reference is required")
         if (self.storage_uri is None) == (self.inline_json is None):
             raise ValueError("exactly one of storage_uri and inline_json is required")
         if self.storage_uri is not None and not re.fullmatch(
@@ -576,7 +581,8 @@ class RawPayloadRecord(RawPayloadWrite):
 class RawPayloadMetadataRecord(DataAccessModel):
     id: UUID
     ingestion_run_id: UUID
-    provider_request_log_id: UUID
+    provider_request_log_id: UUID | None
+    manual_evidence_import_request_id: UUID | None = None
     provider_id: UUID
     security_id: UUID
     category: DataCategory

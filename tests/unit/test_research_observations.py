@@ -20,6 +20,7 @@ NOW = datetime(2026, 7, 24, 8, tzinfo=UTC)
 RUN_ID = UUID("11111111-1111-4111-8111-111111111111")
 INVOCATION_ID = UUID("22222222-2222-4222-8222-222222222222")
 OBSERVATION_ID = UUID("33333333-3333-4333-8333-333333333333")
+STEP_ID = UUID("77777777-7777-4777-8777-777777777778")
 
 
 def _module() -> object:
@@ -50,6 +51,7 @@ def test_builder_canonicalizes_output_and_binds_immutable_provenance() -> None:
     result = observations.ResearchObservationBuilder().build(
         observation_id=OBSERVATION_ID,
         context=_context(),
+        research_step_id=STEP_ID,
         invocation_id=INVOCATION_ID,
         observation_type=ObservationType.STRUCTURED_METRIC,
         status=ObservationStatus.PASS,
@@ -61,6 +63,7 @@ def test_builder_canonicalizes_output_and_binds_immutable_provenance() -> None:
     )
 
     assert result.run_id == RUN_ID
+    assert result.research_step_id == STEP_ID
     assert result.invocation_id == INVOCATION_ID
     assert result.security_id == _context().security_id
     assert result.snapshot_id == _context().snapshot_id
@@ -76,6 +79,7 @@ def test_builder_rejects_non_json_output_binary_float_and_oversize_payload() -> 
     base = {
         "observation_id": OBSERVATION_ID,
         "context": _context(),
+        "research_step_id": STEP_ID,
         "invocation_id": INVOCATION_ID,
         "observation_type": ObservationType.DATA_QUALITY,
         "status": ObservationStatus.PASS,
@@ -103,6 +107,7 @@ def test_tool_error_and_blocked_capability_have_strict_safe_shapes() -> None:
     common = {
         "observation_id": OBSERVATION_ID,
         "context": _context(),
+        "research_step_id": STEP_ID,
         "invocation_id": INVOCATION_ID,
         "schema_version": "observation-v1",
         "synthetic_status": SyntheticStatus.REAL_VERIFIED,
@@ -135,6 +140,7 @@ def test_synthetic_markers_are_preserved_and_never_inferred() -> None:
     result = observations.ResearchObservationBuilder().build(
         observation_id=OBSERVATION_ID,
         context=_context(),
+        research_step_id=STEP_ID,
         invocation_id=INVOCATION_ID,
         observation_type=ObservationType.DOCUMENT_EVIDENCE,
         status=ObservationStatus.PASS,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Annotated, Literal, Protocol, cast
@@ -160,6 +161,30 @@ def generate(
             report_type=report_type,
             report_locale=locale,
         ),
+        json_output,
+    )
+
+
+@report_app.command("generate-from-package")
+def generate_from_package(
+    package_id: Annotated[UUID, typer.Argument()],
+    policy_version: Annotated[str, typer.Argument()],
+    plan_checksum: Annotated[str, typer.Argument()],
+    report_type: Annotated[ReportType, typer.Option("--type")],
+    locale: Annotated[ReportLocale, typer.Option("--locale")] = ReportLocale.ZH_CN,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    if re.fullmatch(r"[0-9a-f]{64}", plan_checksum) is None:
+        raise typer.BadParameter("plan checksum must be lowercase sha256")
+    _invoke(
+        "generate-from-package",
+        {
+            "research_package_id": package_id,
+            "policy_version": policy_version,
+            "plan_checksum": plan_checksum,
+            "report_type": report_type.value,
+            "report_locale": locale.value,
+        },
         json_output,
     )
 

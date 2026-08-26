@@ -215,7 +215,7 @@ def test_stage9_immutability_and_lifecycle_triggers_exist(
 def test_stage9_downgrade_and_reupgrade_preserve_complete_prior_manifest(
     migration_engine: Engine,
 ) -> None:
-    command.upgrade(_config(), "head")
+    command.upgrade(_config(), "0008_production_providers")
     assert PRIOR_STAGE_TABLES | STAGE9_TABLES == set(inspect(migration_engine).get_table_names())
 
     command.downgrade(_config(), "0007_verifiable_reports")
@@ -233,5 +233,5 @@ def test_stage9_downgrade_and_reupgrade_preserve_complete_prior_manifest(
         )
     assert stage9_functions == 0
 
-    command.upgrade(_config(), "head")
+    command.upgrade(_config(), "0008_production_providers")
     assert PRIOR_STAGE_TABLES | STAGE9_TABLES == set(inspect(migration_engine).get_table_names())

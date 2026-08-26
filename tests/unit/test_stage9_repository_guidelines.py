@@ -20,7 +20,8 @@ def test_repository_guidelines_preserve_stage9_scope_without_claiming_stage10_un
     ):
         assert required in historical
 
-    assert "Stage 10: Started / Work in Progress / Development Paused" in text
+    assert "Stage 10 Gate A: Complete" in text
+    assert "Production Live Execution is `NOT EXECUTED`" in text
     assert "These are historical design constraints" in historical
 
 

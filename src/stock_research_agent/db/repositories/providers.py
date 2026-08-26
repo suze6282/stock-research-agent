@@ -42,6 +42,7 @@ from stock_research_agent.domain.providers.artifacts import (
     ProviderIssueSeverity,
     ProviderIssueStatus,
     ProviderRawArtifactRecord,
+    ProviderRawArtifactReservation,
     ProviderRawArtifactWrite,
 )
 from stock_research_agent.domain.providers.canonical import provider_checksum
@@ -90,6 +91,8 @@ from stock_research_agent.domain.providers.sync import (
     ProviderCheckpointRecord,
     ProviderExecutionMode,
     ProviderRequestAttemptRecord,
+    ProviderRequestAttemptReservation,
+    ProviderRequestAttemptSettlement,
     ProviderRequestAttemptWrite,
     ProviderRunStateMachine,
     ProviderRunTransition,
@@ -516,6 +519,79 @@ class SqlAlchemyProviderSyncRepository:
         self._session.flush()
         return _attempt_record(row)
 
+    def reserve_attempt(
+        self,
+        value: ProviderRequestAttemptReservation,
+    ) -> ProviderRequestAttemptRecord:
+        attempt = value.value
+        existing = self._session.scalar(
+            select(ProviderRequestAttempt).where(
+                (ProviderRequestAttempt.id == value.id)
+                | (
+                    (ProviderRequestAttempt.sync_run_id == attempt.sync_run_id)
+                    & (ProviderRequestAttempt.slice_id == attempt.slice_id)
+                    & (ProviderRequestAttempt.attempt_number == attempt.attempt_number)
+                )
+            )
+        )
+        if existing is not None:
+            persisted = _attempt_record(existing).model_dump(
+                mode="json",
+                exclude={"created_at"},
+            )
+            candidate = {
+                "id": str(value.id),
+                **attempt.model_dump(mode="json"),
+            }
+            if persisted != candidate:
+                raise ProviderRepositoryConflict("PROVIDER_ATTEMPT_CONFLICT")
+            return _attempt_record(existing)
+        row = ProviderRequestAttempt(
+            id=value.id,
+            **attempt.model_dump(mode="python", exclude={"status"}),
+            status=attempt.status.value,
+        )
+        self._session.add(row)
+        self._session.flush()
+        return _attempt_record(row)
+
+    def settle_attempt(
+        self,
+        value: ProviderRequestAttemptSettlement,
+    ) -> ProviderRequestAttemptRecord:
+        row = self._session.scalar(
+            select(ProviderRequestAttempt)
+            .where(ProviderRequestAttempt.id == value.id)
+            .with_for_update()
+        )
+        if row is None:
+            raise LookupError("PROVIDER_ATTEMPT_NOT_FOUND")
+        if row.status != ProviderSyncSliceStatus.PENDING.value:
+            persisted = (
+                row.status,
+                row.response_status_code,
+                row.response_bytes,
+                row.completed_at,
+                row.safe_error_code,
+            )
+            expected = (
+                value.status.value,
+                value.response_status_code,
+                value.response_bytes,
+                value.completed_at,
+                value.safe_error_code,
+            )
+            if persisted != expected:
+                raise ProviderRepositoryConflict("PROVIDER_ATTEMPT_SETTLEMENT_CONFLICT")
+            return _attempt_record(row)
+        row.status = value.status.value
+        row.response_status_code = value.response_status_code
+        row.response_bytes = value.response_bytes
+        row.completed_at = value.completed_at
+        row.safe_error_code = value.safe_error_code
+        self._session.flush()
+        return _attempt_record(row)
+
     def compare_and_swap_checkpoint(
         self,
         value: CheckpointAdvance,
@@ -595,6 +671,39 @@ class SqlAlchemyProviderArtifactRepository:
                 exclude={"synthetic_status"},
             ),
             synthetic_status=value.synthetic_status.value,
+        )
+        self._session.add(row)
+        self._session.flush()
+        return _artifact_record(row)
+
+    def add_artifact_with_id(
+        self,
+        value: ProviderRawArtifactReservation,
+    ) -> ProviderRawArtifactRecord:
+        artifact = value.value
+        existing = self._session.scalar(
+            select(ProviderRawArtifact).where(
+                (ProviderRawArtifact.id == value.id)
+                | (
+                    (ProviderRawArtifact.provider_definition_id == artifact.provider_definition_id)
+                    & (ProviderRawArtifact.source_identity == artifact.source_identity)
+                    & (ProviderRawArtifact.source_checksum == artifact.source_checksum)
+                )
+            )
+        )
+        if existing is not None:
+            persisted = _artifact_record(existing).model_dump(
+                mode="json",
+                exclude={"created_at"},
+            )
+            candidate = {"id": str(value.id), **artifact.model_dump(mode="json")}
+            if persisted != candidate:
+                raise ProviderRepositoryConflict("PROVIDER_ARTIFACT_CONFLICT")
+            return _artifact_record(existing)
+        row = ProviderRawArtifact(
+            id=value.id,
+            **artifact.model_dump(mode="python", exclude={"synthetic_status"}),
+            synthetic_status=artifact.synthetic_status.value,
         )
         self._session.add(row)
         self._session.flush()

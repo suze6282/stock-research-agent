@@ -15,6 +15,7 @@ SECURITY_ID = UUID("11111111-1111-4111-8111-111111111111")
 SNAPSHOT_ID = UUID("22222222-2222-4222-8222-222222222222")
 RUN_ID = UUID("33333333-3333-4333-8333-333333333333")
 REQUEST_ID = UUID("44444444-4444-4444-8444-444444444444")
+STEP_ID = UUID("55555555-5555-4555-8555-555555555554")
 AS_OF = datetime(2026, 7, 23, 4, 5, 6, tzinfo=UTC)
 
 
@@ -168,6 +169,7 @@ def test_observation_rejects_binary_float_and_unbounded_payload() -> None:
     base = {
         "id": UUID("55555555-5555-4555-8555-555555555555"),
         "run_id": RUN_ID,
+        "research_step_id": STEP_ID,
         "invocation_id": UUID("66666666-6666-4666-8666-666666666666"),
         "observation_type": enums.ObservationType.STRUCTURED_METRIC,
         "status": enums.ObservationStatus.PASS,
@@ -189,6 +191,32 @@ def test_observation_rejects_binary_float_and_unbounded_payload() -> None:
         schemas.ResearchObservationRecord(**{**base, "payload": {"value": 10.25}})
     with pytest.raises(ValidationError):
         schemas.ResearchObservationRecord(**{**base, "payload": {"text": "x" * 262_145}})
+
+
+def test_component_security_identity_observation_has_step_lineage_without_invocation() -> None:
+    """RED-016: a component Observation has a real Step parent and no Invocation."""
+    enums, schemas = _modules()
+
+    observation = schemas.ResearchObservationWrite(
+        id=UUID("55555555-5555-4555-8555-555555555555"),
+        run_id=RUN_ID,
+        research_step_id=STEP_ID,
+        invocation_id=None,
+        observation_type=enums.ObservationType.SECURITY_IDENTITY,
+        status=enums.ObservationStatus.PASS,
+        schema_version="research-observation-v1",
+        payload={"security_id": str(SECURITY_ID)},
+        output_checksum="b" * 64,
+        security_id=SECURITY_ID,
+        snapshot_id=SNAPSHOT_ID,
+        research_as_of_time=AS_OF,
+        synthetic_status=enums.SyntheticStatus.REAL_VERIFIED,
+        warnings=(),
+        created_at=AS_OF,
+    )
+
+    assert observation.research_step_id == STEP_ID
+    assert observation.invocation_id is None
 
 
 def test_numeric_claim_requires_exact_shape_and_serializes_decimal_as_string() -> None:

@@ -136,6 +136,7 @@ def test_columns_match_the_stage_4_persistence_contract() -> None:
             "id",
             "ingestion_run_id",
             "provider_request_log_id",
+            "manual_evidence_import_request_id",
             "provider_id",
             "security_id",
             "category",
@@ -287,6 +288,7 @@ def test_foreign_keys_are_named_targeted_and_restrict_deletion() -> None:
         "raw_payloads": {
             "ingestion_runs.id",
             "provider_request_logs.id",
+            "manual_evidence_import_requests.id",
             "data_providers.id",
             "securities.id",
         },

@@ -1,5 +1,14 @@
 # Public Fixture Replacement Matrix
 
+## Stage 10 security fixtures
+
+The Stage 10 parser-security tests use three project-authored attack-shaped assets under
+`tests/fixtures/live_evidence/`: a minimal PDF with an active-action marker, a minimal
+HTML script payload, and a duplicate-key JSON payload. Their fixed manifest identifies
+them as `SYNTHETIC_TEST_ONLY`, `NOT_COMPANY_EVIDENCE`, `NOT_PROVIDER_DATA`, `OFFLINE`,
+and `NOT_LIVE`. They preserve file-security rejection, checksum, size, MIME, and LF
+contracts without containing company evidence or Provider data.
+
 ## Purpose
 
 The Public Export excludes all source-derived SEC, SSE, and Nasdaq Fixture payloads.

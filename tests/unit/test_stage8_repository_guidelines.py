@@ -24,7 +24,8 @@ def test_repository_guidelines_preserve_stage8_scope_as_historical_context() -> 
         assert required in text
 
     assert "Do not implement directly on `main`" in text
-    assert "Stage 10: Started / Work in Progress / Development Paused" in text
+    assert "Stage 10 Gate A: Complete" in text
+    assert "Gate B engineering: Partially implemented" in text
 
 
 def test_repository_guidelines_preserve_stage7_evidence_and_safety_boundaries() -> None:

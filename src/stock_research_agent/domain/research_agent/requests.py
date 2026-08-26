@@ -71,7 +71,7 @@ class ResearchRequestService:
         snapshot = self._snapshots.get_snapshot(command.snapshot_id)
         if snapshot is None:
             raise ResearchRequestError("SNAPSHOT_NOT_FOUND")
-        if snapshot.status != "COMPLETE":
+        if snapshot.status not in {"COMPLETE", "PARTIAL"}:
             raise ResearchRequestError("SNAPSHOT_NOT_COMPLETE")
         if snapshot.security_id != security_id:
             raise ResearchRequestError("SNAPSHOT_SECURITY_MISMATCH")

@@ -2,9 +2,9 @@
 
 ## 1. 适用范围
 
-本文对应稳定 `main` 分支：Stage 1–9 已完成工程验收，Stage 9 的结论是
-`CONDITIONAL GO`。Stage 10 代码只存在于独立 WIP 分支，尚未完成最终验收，不属于本指南
-默认运行范围。
+本文对应 sanitized public engineering candidate：Stage 1–9 已完成工程验收，Stage 9
+结论为 `CONDITIONAL GO`；Stage 10 Offline Production Acceptance 和 Gate A 已完成，
+Gate B engineering 仅部分实现且 readiness 为 `NO_GO`。
 
 当前适合本地工程运行、离线 Fixture 工作流、PostgreSQL 迁移、测试、RAG/Agent/Report
 架构验证。它不是实时投资产品或自动交易系统。
@@ -86,8 +86,7 @@ uv run alembic current
 uv run alembic upgrade head
 ```
 
-稳定 `main` 的 Alembic head 是 `0008_create_production_data_providers.py`。Stage 10 WIP
-分支另有 `0009_controlled_live_evidence.py`，尚未合入 `main`。
+当前 Alembic head 是 `0013_gate_b_attempt_number_capacity.py`。
 
 仅在可丢弃的开发/测试数据库验证回滚：
 
@@ -117,6 +116,10 @@ uv run stock-research rag --help
 uv run stock-research agent --help
 uv run stock-research report --help
 uv run stock-research provider --help
+uv run stock-research live --help
+uv run stock-research evidence --help
+uv run stock-research snapshot-ingestion --help
+uv run stock-research research-pipeline --help
 uv run stock-research tools --help
 ```
 
@@ -132,6 +135,10 @@ uv run stock-research tools --help
 | `agent` | 显式 plan/run/control/read Research Run |
 | `report` | 显式 generate/reflect/revise/release-check/read/export |
 | `provider` | Provider 治理查询及显式受控操作；默认仍不允许 Live |
+| `live` | 规划和检查受控 Live evidence；不会自行授权或执行生产操作 |
+| `evidence` | 显式导入和审核离线 Manual Evidence |
+| `snapshot-ingestion` | 从已治理 ingestion 显式规划/创建 Snapshot |
+| `research-pipeline` | 针对精确 Snapshot 运行离线研究链 |
 | `tools` | 查看固定 read-only Tool Catalog |
 
 精确参数以每个命令的 `--help` 为准，不应从旧文档猜测。
@@ -151,8 +158,8 @@ uv run uvicorn stock_research_agent.main:app --host 127.0.0.1 --port 8000
 - OpenAPI UI：`http://127.0.0.1:8000/docs`
 
 稳定业务 API 注册 securities、issuers、data、snapshots、financials、rag、research-agent、
-reports 和 providers。它们是 GET-only 查询边界，不会隐式同步 Provider、运行 Agent 或生成
-Report。
+reports、providers 和 `live-evidence`。它们是 GET-only 查询边界，不会隐式同步
+Provider、运行 Agent 或生成 Report。
 
 ## 9. 最小离线示例
 
@@ -238,10 +245,12 @@ uv run pytest -W error
 
 `PUBLISHABLE` 不表示公开发布、合规审批、投资建议、券商执行或自动交易许可。
 
-## 14. Stage 10 WIP
+## 14. Stage 10 Gate A 与 Gate B 边界
 
-Stage 10 已经开始但暂停。其 WIP 分支不属于稳定 Quick Start；Task 78–80 和最终验收尚未
-完成。不要在 `main` 或文档分支继续实现 Stage 10，也不要将 WIP 能力描述为生产完成。
+Stage 10 Offline Production Acceptance 和 Gate A 已完成。Gate B engineering 仅部分实现，
+readiness 为 `NO_GO`，Production Authorization 为 `NOT AUTHORIZED`，Production Live
+Execution 为 `NOT EXECUTED`，SEC Production Pilot 尚未执行，Stage 11 为 `NOT STARTED`。
+不要把工程代码存在描述为生产完成或 Live 获批。
 
 ## 15. 安全提示
 

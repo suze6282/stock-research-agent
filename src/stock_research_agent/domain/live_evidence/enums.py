@@ -1,0 +1,99 @@
+from enum import StrEnum
+
+
+class EvidenceSourceType(StrEnum):
+    PROVIDER_LIVE = "PROVIDER_LIVE"
+    MANUAL_IMPORT = "MANUAL_IMPORT"
+    SYNTHETIC_TEST = "SYNTHETIC_TEST"
+    OFFLINE_FIXTURE = "OFFLINE_FIXTURE"
+
+
+class LiveAuthorizationState(StrEnum):
+    DRAFT = "DRAFT"
+    APPROVED = "APPROVED"
+    ACTIVE = "ACTIVE"
+    CONSUMED = "CONSUMED"
+    EXPIRED = "EXPIRED"
+    REVOKED = "REVOKED"
+    CANCELLED = "CANCELLED"
+
+
+class LiveAuthorizationEventType(StrEnum):
+    APPROVE = "APPROVE"
+    ACTIVATE = "ACTIVATE"
+    CONSUME = "CONSUME"
+    EXPIRE = "EXPIRE"
+    REVOKE = "REVOKE"
+    CANCEL = "CANCEL"
+
+
+class ConsumptionState(StrEnum):
+    RESERVED = "RESERVED"
+    SETTLED = "SETTLED"
+    ABANDONED = "ABANDONED"
+
+
+class ExecutionApprovalState(StrEnum):
+    VALID = "VALID"
+    EXPIRED = "EXPIRED"
+    CONSUMED = "CONSUMED"
+    BLOCKED = "BLOCKED"
+
+
+class ManualEvidenceSourceType(StrEnum):
+    USER_SUPPLIED_OFFICIAL_DOCUMENT = "USER_SUPPLIED_OFFICIAL_DOCUMENT"
+    USER_SUPPLIED_PROVIDER_EXPORT = "USER_SUPPLIED_PROVIDER_EXPORT"
+    USER_SUPPLIED_STRUCTURED_DATA = "USER_SUPPLIED_STRUCTURED_DATA"
+    USER_SUPPLIED_UNVERIFIED_DOCUMENT = "USER_SUPPLIED_UNVERIFIED_DOCUMENT"
+
+
+class ManualEvidenceState(StrEnum):
+    RECEIVED = "RECEIVED"
+    QUARANTINED = "QUARANTINED"
+    VALIDATING = "VALIDATING"
+    APPROVED = "APPROVED"
+    PARTIAL = "PARTIAL"
+    REJECTED = "REJECTED"
+    BLOCKED = "BLOCKED"
+    INGESTED = "INGESTED"
+
+
+class ManualLicenseStatus(StrEnum):
+    CONFIRMED = "CONFIRMED"
+    UNKNOWN = "UNKNOWN"
+    EXPIRED = "EXPIRED"
+    PROHIBITED = "PROHIBITED"
+
+
+class RightsDecision(StrEnum):
+    ALLOWED = "ALLOWED"
+    PROHIBITED = "PROHIBITED"
+    UNKNOWN = "UNKNOWN"
+
+
+class ManualValidationStatus(StrEnum):
+    PASS = "PASS"
+    PARTIAL = "PARTIAL"
+    BLOCKED = "BLOCKED"
+    FAIL = "FAIL"
+
+
+class ManualValidationSeverity(StrEnum):
+    INFO = "INFO"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class ManualReviewDecision(StrEnum):
+    APPROVED = "APPROVED"
+    PARTIAL = "PARTIAL"
+    REJECTED = "REJECTED"
+    BLOCKED = "BLOCKED"
+
+
+class ManualContentType(StrEnum):
+    PDF = "PDF"
+    HTML = "HTML"
+    JSON = "JSON"

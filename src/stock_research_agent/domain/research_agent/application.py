@@ -9,19 +9,32 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from stock_research_agent.domain.research_agent.canonical import stable_checksum
+from stock_research_agent.domain.research_agent.claim_pipeline import (
+    ProductionDeterministicClaimPipeline,
+)
 from stock_research_agent.domain.research_agent.enums import (
     ObservationStatus,
     ObservationType,
+    ResearchMode,
     ResearchPackageStatus,
     ResearchRunStatus,
     ResearchStepStatus,
     SyntheticStatus,
     ToolInvocationStatus,
 )
+from stock_research_agent.domain.research_agent.evidence_adapters import (
+    ProductionObservationEvidenceAdapter,
+    SecurityIdentitySourceRepository,
+    security_master_identity_projection,
+)
 from stock_research_agent.domain.research_agent.packages import ResearchPackageAssembler
 from stock_research_agent.domain.research_agent.schemas import (
     ControlledRunContext,
     ResearchAgentRunRecord,
+    ResearchEvidenceRecord,
+    ResearchEvidenceWrite,
+    ResearchObservationRecord,
     ResearchObservationWrite,
     ResearchPackageRecord,
     ResearchPackageWrite,
@@ -67,7 +80,14 @@ class ExecutionRepository(Protocol):
         value: ResearchToolInvocationCompletion,
     ) -> object: ...
 
-    def add_observation(self, value: ResearchObservationWrite) -> object: ...
+    def add_observation(self, value: ResearchObservationWrite) -> ResearchObservationRecord: ...
+
+    def add_evidence(
+        self,
+        values: tuple[ResearchEvidenceWrite, ...],
+    ) -> tuple[ResearchEvidenceRecord, ...]: ...
+
+    def list_evidence(self, run_id: UUID) -> tuple[ResearchEvidenceRecord, ...]: ...
 
     def add_package(self, value: ResearchPackageWrite) -> ResearchPackageRecord: ...
 
@@ -130,6 +150,9 @@ class DeterministicResearchExecutionService:
         repository: ExecutionRepository,
         state_machine: RunStateMachine,
         registries: Sequence[ToolRegistry],
+        security_master: SecurityIdentitySourceRepository,
+        evidence_adapter: ProductionObservationEvidenceAdapter,
+        claim_pipeline: ProductionDeterministicClaimPipeline,
         id_factory: Callable[[], UUID],
         clock: Callable[[], datetime],
     ) -> None:
@@ -137,6 +160,9 @@ class DeterministicResearchExecutionService:
         self._state_machine = state_machine
         self._id_factory = id_factory
         self._clock = clock
+        self._security_master = security_master
+        self._evidence_adapter = evidence_adapter
+        self._claim_pipeline = claim_pipeline
         self._executor = ResearchToolExecutor(
             registry=CompositeReadOnlyToolInvoker(registries),
             id_factory=id_factory,
@@ -189,6 +215,12 @@ class DeterministicResearchExecutionService:
                 ResearchStepStatus.RUNNING,
             )
             if active.definition.tool_name is None:
+                if active.definition.step_key == "resolve_security":
+                    self._persist_security_identity(
+                        step=active,
+                        context=_context(running, request),
+                        real_research=request.research_mode is ResearchMode.REAL_RESEARCH,
+                    )
                 target = (
                     ResearchStepStatus.BLOCKED
                     if active.definition.step_key == "validate_evidence" and blocked
@@ -208,7 +240,12 @@ class DeterministicResearchExecutionService:
                 synthetic_status=SyntheticStatus.REAL_VERIFIED,
             )
             budget = result.budget
-            self._persist_execution(result)
+            self._persist_execution(
+                result,
+                context=_context(running, request),
+                tool_name=active.definition.tool_name,
+                real_research=request.research_mode is ResearchMode.REAL_RESEARCH,
+            )
             target = _step_status(result.status)
             self._transition(active, ResearchStepStatus.RUNNING, target)
             if target is ResearchStepStatus.BLOCKED:
@@ -218,6 +255,14 @@ class DeterministicResearchExecutionService:
                 blocked.append(f"{active.definition.tool_name.upper()}_FAILED")
 
         running = self._repository.update_run_budget(run.id, budget)
+        claims = self._claim_pipeline.build_and_validate(
+            run_id=run.id,
+            research_mode=request.research_mode,
+        )
+        evidence = self._repository.list_evidence(run.id)
+        warnings = list(running.warning_codes)
+        if not claims:
+            warnings.append("NO_VALIDATED_CLAIMS")
         package = ResearchPackageAssembler().assemble(
             package_id=self._id_factory(),
             run_id=run.id,
@@ -230,10 +275,10 @@ class DeterministicResearchExecutionService:
             planner_version=run.planner_version,
             tool_catalog_version=run.tool_catalog_version,
             requested_sections=request.requested_sections,
-            claims=(),
-            evidence=(),
+            claims=claims,
+            evidence=evidence,
             blocked_capabilities=tuple(sorted(set(blocked))),
-            warnings=("NO_VALIDATED_CLAIMS",),
+            warnings=tuple(dict.fromkeys(warnings)),
             run_failed=failed,
             created_at=self._clock(),
         )
@@ -264,7 +309,14 @@ class DeterministicResearchExecutionService:
             changed_at=self._clock(),
         )
 
-    def _persist_execution(self, result: object) -> None:
+    def _persist_execution(
+        self,
+        result: object,
+        *,
+        context: ControlledRunContext,
+        tool_name: str,
+        real_research: bool,
+    ) -> None:
         from stock_research_agent.domain.research_agent.schemas import ToolExecutionResult
 
         if not isinstance(result, ToolExecutionResult):
@@ -294,11 +346,56 @@ class DeterministicResearchExecutionService:
             ),
         )
         if result.observation is not None:
-            self._repository.add_observation(
+            observation = self._repository.add_observation(
                 ResearchObservationWrite.model_validate(
                     result.observation.model_dump(mode="python")
                 )
             )
+            evidence = self._evidence_adapter.admit(
+                context=context,
+                tool_name=tool_name,
+                observation=observation,
+                real_research=real_research,
+            )
+            self._repository.add_evidence((evidence,))
+
+    def _persist_security_identity(
+        self,
+        *,
+        step: ResearchStepRecord,
+        context: ControlledRunContext,
+        real_research: bool,
+    ) -> None:
+        detail = self._security_master.get_security(context.security_id)
+        if detail is None:
+            raise LookupError("SECURITY_NOT_FOUND")
+        payload = security_master_identity_projection(detail)
+        observation = self._repository.add_observation(
+            ResearchObservationWrite(
+                id=self._id_factory(),
+                run_id=context.research_agent_run_id,
+                research_step_id=step.id,
+                invocation_id=None,
+                observation_type=ObservationType.SECURITY_IDENTITY,
+                status=ObservationStatus.PASS,
+                schema_version="research-observation-v1",
+                payload=payload,
+                output_checksum=stable_checksum(payload),
+                security_id=context.security_id,
+                snapshot_id=context.snapshot_id,
+                research_as_of_time=context.research_as_of_time,
+                synthetic_status=SyntheticStatus.REAL_VERIFIED,
+                warnings=(),
+                created_at=self._clock(),
+            )
+        )
+        evidence = self._evidence_adapter.admit_security_identity(
+            context=context,
+            observation=observation,
+            security_master=self._security_master,
+            real_research=real_research,
+        )
+        self._repository.add_evidence((evidence,))
 
 
 def _context(

@@ -293,7 +293,8 @@ class ResearchToolInvocationRecord(ResearchToolInvocationWrite):
 class ResearchObservationWrite(FrozenContract):
     id: UUID
     run_id: UUID
-    invocation_id: UUID
+    research_step_id: UUID
+    invocation_id: UUID | None
     observation_type: ObservationType
     status: ObservationStatus
     schema_version: Version

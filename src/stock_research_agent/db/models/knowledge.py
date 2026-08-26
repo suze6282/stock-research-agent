@@ -108,7 +108,7 @@ class DocumentVersion(_CreatedUuidMixin, Base):
         UniqueConstraint("logical_document_id", "checksum", name="uq_document_versions_checksum"),
         CheckConstraint("version_number > 0", name="ck_document_versions_number"),
         CheckConstraint("checksum ~ '^[0-9a-f]{64}$'", name="ck_document_versions_checksum"),
-        CheckConstraint("byte_size BETWEEN 1 AND 10000000", name="ck_document_versions_size"),
+        CheckConstraint("byte_size BETWEEN 1 AND 26214400", name="ck_document_versions_size"),
         CheckConstraint("checksum_algorithm = 'sha256'", name="ck_document_versions_algorithm"),
         CheckConstraint(
             "source_version_status IN ('ACTIVE','WITHDRAWN','UNKNOWN')",

@@ -24,6 +24,7 @@ Thumbs.db
 
 # Local logs, temporary files, and generated runtime state.
 logs/
+log/
 tmp/
 temp/
 *.log
@@ -44,7 +45,11 @@ artifacts/
 raw_data/
 provider_data/
 provider_cache/
+provider_raw_artifacts/
 blobs/
+runtime/
+downloads/
+operational_backups/
 credentials/
 secrets/
 *.pem

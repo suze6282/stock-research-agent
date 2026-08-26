@@ -10,6 +10,9 @@ from stock_research_agent.config import Settings
 from stock_research_agent.db.repositories.data_access import SqlAlchemyDataAccessRepository
 from stock_research_agent.db.repositories.financials import SqlAlchemyFinancialRepository
 from stock_research_agent.db.repositories.knowledge import SqlAlchemyKnowledgeRepository
+from stock_research_agent.db.repositories.live_evidence import (
+    SqlAlchemyLiveEvidenceQueryRepository,
+)
 from stock_research_agent.db.repositories.providers import SqlAlchemyProviderQueryRepository
 from stock_research_agent.db.repositories.research_agent import (
     SqlAlchemyResearchAgentRepository,
@@ -20,6 +23,7 @@ from stock_research_agent.db.repositories.security_master import (
 from stock_research_agent.db.session import session_scope
 from stock_research_agent.domain.data_access.queries import DataAccessQueryService
 from stock_research_agent.domain.financials.queries import FinancialQueryService
+from stock_research_agent.domain.live_evidence.queries import LiveEvidenceQueryService
 from stock_research_agent.domain.providers.queries import ProviderQueryService
 from stock_research_agent.domain.reports.queries import (
     ReportQueryRepository,
@@ -59,6 +63,12 @@ def get_database_session(request: Request) -> Iterator[Session]:
         )
     with session_scope(factory) as session:
         yield session
+
+
+def get_live_evidence_query_service(
+    session: Annotated[Session, Depends(get_database_session)],
+) -> LiveEvidenceQueryService:
+    return LiveEvidenceQueryService(SqlAlchemyLiveEvidenceQueryRepository(session))
 
 
 def get_security_master_repository(

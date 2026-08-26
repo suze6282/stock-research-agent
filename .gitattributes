@@ -7,3 +7,6 @@ tests/fixtures/research_agent/*.json text eol=lf
 tests/fixtures/reports/*.json text eol=lf
 tests/fixtures/reports/*.md text eol=lf
 tests/fixtures/providers/**/*.json text eol=lf
+tests/fixtures/live_evidence/*.json text eol=lf
+tests/fixtures/live_evidence/*.html text eol=lf
+tests/fixtures/live_evidence/*.pdf text eol=lf

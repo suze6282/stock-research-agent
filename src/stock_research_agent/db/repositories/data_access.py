@@ -149,7 +149,10 @@ class SqlAlchemyDataAccessRepository:
         return ProviderRequestLogRecord.model_validate(entity)
 
     def add_raw_payload(self, value: RawPayloadWrite) -> RawPayloadRecord:
-        values = value.model_dump(mode="python")
+        values = value.model_dump(
+            mode="python",
+            exclude={"manual_evidence_import_request_id"},
+        )
         if value.storage_uri is not None:
             # PostgreSQL JSONB encodes Python None as JSON null. The persistence
             # contract requires SQL NULL for the non-selected storage branch.

@@ -11,6 +11,7 @@ from stock_research_agent.domain.providers.artifacts import (
     ProviderIngestionManifestRecord,
     ProviderIngestionManifestWrite,
     ProviderRawArtifactRecord,
+    ProviderRawArtifactReservation,
     ProviderRawArtifactWrite,
 )
 from stock_research_agent.domain.providers.capabilities import (
@@ -42,6 +43,8 @@ from stock_research_agent.domain.providers.sync import (
     CheckpointScope,
     ProviderCheckpointRecord,
     ProviderRequestAttemptRecord,
+    ProviderRequestAttemptReservation,
+    ProviderRequestAttemptSettlement,
     ProviderRequestAttemptWrite,
     ProviderRunTransition,
     ProviderSyncPlanRecord,
@@ -157,6 +160,16 @@ class ProviderSyncRepository(Protocol):
         value: ProviderRequestAttemptWrite,
     ) -> ProviderRequestAttemptRecord: ...
 
+    def reserve_attempt(
+        self,
+        value: ProviderRequestAttemptReservation,
+    ) -> ProviderRequestAttemptRecord: ...
+
+    def settle_attempt(
+        self,
+        value: ProviderRequestAttemptSettlement,
+    ) -> ProviderRequestAttemptRecord: ...
+
     def compare_and_swap_checkpoint(
         self,
         value: CheckpointAdvance,
@@ -173,6 +186,11 @@ class ProviderArtifactRepository(Protocol):
     def add_artifact(
         self,
         value: ProviderRawArtifactWrite,
+    ) -> ProviderRawArtifactRecord: ...
+
+    def add_artifact_with_id(
+        self,
+        value: ProviderRawArtifactReservation,
     ) -> ProviderRawArtifactRecord: ...
 
     def add_manifest(

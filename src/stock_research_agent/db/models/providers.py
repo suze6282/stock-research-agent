@@ -594,7 +594,7 @@ class ProviderRequestAttempt(_ProviderControlPlaneRecord):
             name="ck_provider_request_attempts_status",
         ),
         CheckConstraint(
-            "attempt_number BETWEEN 1 AND 3 AND response_bytes >= 0 "
+            "attempt_number BETWEEN 1 AND 4 AND response_bytes >= 0 "
             "AND (response_status_code IS NULL "
             "OR response_status_code BETWEEN 100 AND 599)",
             name="ck_provider_request_attempts_bounds",
@@ -1093,6 +1093,12 @@ class ProviderLiveValidationRun(_ProviderControlPlaneRecord):
             name="fk_provider_live_validation_runs_capability",
             ondelete="RESTRICT",
         ),
+        ForeignKeyConstraint(
+            ["live_authorization_grant_id"],
+            ["live_authorization_grants.id"],
+            name="fk_provider_live_validation_runs_live_authorization",
+            ondelete="RESTRICT",
+        ),
         CheckConstraint(
             "status IN ('NOT_ATTEMPTED','AUTHORIZED','RUNNING','PASS','FAILED','BLOCKED')",
             name="ck_provider_live_validation_runs_status",
@@ -1116,6 +1122,7 @@ class ProviderLiveValidationRun(_ProviderControlPlaneRecord):
     provider_definition_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
     provider_capability_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
     authorization_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    live_authorization_grant_id: Mapped[UUID | None] = mapped_column(Uuid)
     status: Mapped[str] = mapped_column(
         String(32),
         nullable=False,

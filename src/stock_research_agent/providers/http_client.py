@@ -23,6 +23,7 @@ from typing import TypeVar, cast
 import httpx
 
 from stock_research_agent.providers.cache import CachedResponse, ResponseCache
+from stock_research_agent.providers.credentials import ProtectedRequestIdentity
 from stock_research_agent.providers.errors import (
     HttpPolicyError,
     HttpTimeoutError,
@@ -250,7 +251,7 @@ def _cache_key(url: str, accept: str) -> str:
 @dataclass(frozen=True, slots=True)
 class HttpClientPolicy:
     allowed_hosts: frozenset[str]
-    user_agent: str
+    user_agent: str | None
     network_enabled: bool = False
     connect_timeout_seconds: float = 5.0
     read_timeout_seconds: float = 15.0
@@ -259,6 +260,7 @@ class HttpClientPolicy:
     max_redirects: int = 3
     max_attempts: int = 3
     retry_base_delay_seconds: float = 0.25
+    retryable_status_codes: frozenset[int] = _RETRYABLE_STATUS_CODES
 
     def __post_init__(self) -> None:
         if not self.allowed_hosts:
@@ -277,10 +279,13 @@ class HttpClientPolicy:
             raise HttpPolicyError("Provider redirect limit is outside its safe range")
         if not 1 <= self.max_attempts <= 3:
             raise HttpPolicyError("Provider attempt limit is outside its safe range")
-        if not 1 <= len(self.user_agent) <= 256:
-            raise HttpPolicyError("Provider User-Agent length is outside its safe range")
-        if any(ord(character) < 32 or ord(character) == 127 for character in self.user_agent):
-            raise HttpPolicyError("Provider User-Agent contains control characters")
+        if self.user_agent is not None:
+            if not 1 <= len(self.user_agent) <= 256:
+                raise HttpPolicyError("Provider User-Agent length is outside its safe range")
+            if any(ord(character) < 32 or ord(character) == 127 for character in self.user_agent):
+                raise HttpPolicyError("Provider User-Agent contains control characters")
+        if any(not 100 <= status <= 599 for status in self.retryable_status_codes):
+            raise HttpPolicyError("Provider retryable status code is outside its safe range")
 
 
 @dataclass(frozen=True, slots=True)
@@ -339,6 +344,7 @@ class SafeHttpClient:
         *,
         cache: ResponseCache,
         rate_limiter: RateLimiter,
+        request_identity: ProtectedRequestIdentity | None = None,
         transport: httpx.BaseTransport | None = None,
         resolver: Resolver | None = None,
         sleeper: Callable[[float], None] = time.sleep,
@@ -347,6 +353,7 @@ class SafeHttpClient:
         self._policy = policy
         self._cache = cache
         self._rate_limiter = rate_limiter
+        self._request_identity = request_identity
         self._resolver = resolver or _default_resolver
         self._sleeper = sleeper
         self._monotonic = monotonic
@@ -549,6 +556,8 @@ class SafeHttpClient:
         """Perform a policy-controlled GET request."""
         if not self._policy.network_enabled:
             raise NetworkDisabledError("Provider network access is disabled")
+        if self._policy.user_agent is None and self._request_identity is None:
+            raise HttpPolicyError("Provider request identity is required")
         deadline = self._monotonic() + self._policy.total_timeout_seconds
         cache_key = _cache_key(request.url, request.accept)
         cached = self._cache.get(cache_key)
@@ -558,11 +567,18 @@ class SafeHttpClient:
             if name.lower() not in _PROTECTED_REQUEST_HEADER_NAMES:
                 headers[name] = value
         _validate_header("Accept", request.accept)
+        user_agent = (
+            self._request_identity._emit_user_agent()
+            if self._request_identity is not None
+            else self._policy.user_agent
+        )
+        if user_agent is None:
+            raise HttpPolicyError("Provider request identity is required")
         headers.update(
             {
                 "Accept": request.accept,
                 "Accept-Encoding": "identity",
-                "User-Agent": self._policy.user_agent,
+                "User-Agent": user_agent,
             }
         )
         if cached is not None:
@@ -648,7 +664,7 @@ class SafeHttpClient:
                                 etag=cached.etag,
                                 last_modified=cached.last_modified,
                             )
-                        if response.status_code not in _RETRYABLE_STATUS_CODES:
+                        if response.status_code not in self._policy.retryable_status_codes:
                             content_length = response.headers.get("Content-Length")
                             if content_length is not None:
                                 try:

@@ -51,6 +51,11 @@ from stock_research_agent.providers.control_plane import (
     ProviderSyncControlCommand,
     ProviderSyncControlService,
 )
+from stock_research_agent.providers.sec_edgar.bootstrap import (
+    SEC_EDGAR_PUBLIC_V1_CONTROL_PLANE_BOOTSTRAP,
+    SecProviderControlPlaneBootstrapApplication,
+    SecProviderControlPlaneBootstrapConflict,
+)
 
 EXIT_NOT_FOUND = 3
 EXIT_FAILED = 4
@@ -568,6 +573,49 @@ def _render(value: BaseModel, json_output: bool) -> None:
         return
     for key, item in payload.items():
         typer.echo(f"{key}: {item}")
+
+
+@provider_app.command("bootstrap-sec-control-plane")
+def bootstrap_sec_control_plane(
+    dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
+    confirm: Annotated[bool, typer.Option("--confirm")] = False,
+    json_output: JsonOutput = False,
+) -> None:
+    """Inspect or materialize the exact SEC control-plane manifest."""
+    if not dry_run and not confirm:
+        typer.echo("SEC_PROVIDER_BOOTSTRAP_CONFIRMATION_REQUIRED")
+        raise typer.Exit(code=EXIT_FAILED)
+    engine: Engine | None = None
+    try:
+        settings = Settings()
+        if settings.database_url is None:
+            typer.echo("SEC_PROVIDER_BOOTSTRAP_DATABASE_URL_REQUIRED")
+            raise typer.Exit(code=EXIT_FAILED)
+        engine = create_engine_from_settings(settings)
+        application = SecProviderControlPlaneBootstrapApplication(
+            create_session_factory(engine),
+            SEC_EDGAR_PUBLIC_V1_CONTROL_PLANE_BOOTSTRAP,
+        )
+        result = application.inspect() if dry_run else application.bootstrap()
+        payload = result.model_dump(mode="json")
+        if json_output:
+            typer.echo(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+        else:
+            for key, item in payload.items():
+                typer.echo(f"{key}: {item}")
+        if result.status.value == "CONFLICT":
+            raise typer.Exit(code=EXIT_FAILED)
+    except SecProviderControlPlaneBootstrapConflict as error:
+        payload = {"status": "CONFLICT", "code": error.code}
+        if json_output:
+            typer.echo(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+        else:
+            for key, item in payload.items():
+                typer.echo(f"{key}: {item}")
+        raise typer.Exit(code=EXIT_FAILED) from None
+    finally:
+        if engine is not None:
+            engine.dispose()
 
 
 def _invoke(

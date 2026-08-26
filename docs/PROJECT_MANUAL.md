@@ -6,8 +6,8 @@
 工程门禁和当前限制。它面向维护者、工程师、AI Agent/AI 产品岗位面试官，以及后续继续
 开发本项目的人员。
 
-仓库的稳定默认基线是 `main`。Stage 10 仅存在于独立 WIP 分支，本文会明确区分稳定能力
-和开发中能力。
+本文对应 sanitized public engineering candidate：它包含 Stage 10 Gate A 和部分 Gate B
+engineering 代码，同时明确区分实现、readiness、授权、执行与生产证据。
 
 ## 2. 系统定位与边界
 
@@ -171,24 +171,25 @@ license decision；Fixture 必须明确 `SYNTHETIC_TEST_ONLY`、`NOT_COMPANY_EVI
 
 ## 9. Stage 10：Controlled Live Evidence
 
-Stage 10 已开始，但只存在于 `stage-10/controlled-live-evidence` WIP 分支，未合入 `main`。
-当前实现包含有限 Live Authorization、单次消费/预算、Manual Evidence 安全导入、
+Stage 10 Offline Production Acceptance 与 Gate A 已完成。当前实现包含有限 Live
+Authorization、单次消费/预算、Manual Evidence 安全导入、
 Evidence Manifest 与 Snapshot 绑定、显式 Snapshot/Agent/Report pipeline、Retention、
 Incident、read-only Tool/API、CLI、PostgreSQL models/migration 和离线安全测试。
 
 当前事实：
 
-- Task 0–77 已实现并保存 checkpoint；
-- Round 1 的 CRITICAL/HIGH remediation 已完成；
-- Task 78（Reflection Round 2）、Task 79（Implementation Report）和 Task 80（Gate A
-  final acceptance）尚未完成；
-- Gate B 与任何真实 Live Provider 执行仍为 `NOT_ATTEMPTED`；
-- Stage 10 状态必须写为 `Work in Progress / Development Paused`，不能写 `Complete`。
+- Gate A：`GATE_A_COMPLETE`；
+- Gate B engineering：Partially Implemented / Active Engineering Baseline；
+- Gate B readiness：`NO_GO`；
+- Production Authorization：`NOT AUTHORIZED`；
+- Production Live Execution：`NOT EXECUTED`；
+- SEC Production Pilot：Not complete / `NOT_EXECUTED`；
+- Stage 11：`NOT STARTED`。
 
 ## 10. PostgreSQL 与迁移
 
-稳定 `main` 的 Alembic head 是 `0008_create_production_data_providers.py`；Stage 10 WIP
-分支另有未合入 `main` 的 `0009_controlled_live_evidence.py`。
+当前 Alembic head 是 `0013_gate_b_attempt_number_capacity.py`，迁移链从 Stage 9 的
+`0008_create_production_data_providers.py` 线性延伸至 Stage 10 Gate A/Gate B engineering。
 
 仓库使用 SQLAlchemy 2 typed mappings、命名约束、RESTRICT foreign keys、状态检查、索引和
 不可变触发器。开发与测试数据库必须分离，测试数据库名以 `_test` 结尾。
@@ -206,9 +207,9 @@ uv run alembic upgrade head
 
 ## 11. API
 
-应用入口是 `stock_research_agent.main:app`，默认前缀 `/api/v1`。稳定 `main` 注册 health、
-securities、issuers、data、snapshots、financials、rag、research-agent、reports 和 providers
-路由。业务路由均为 GET 查询；写操作不通过查询 API 隐式发生。
+应用入口是 `stock_research_agent.main:app`，默认前缀 `/api/v1`。注册 health、securities、
+issuers、data、snapshots、financials、rag、research-agent、reports、providers 和
+`live-evidence` 路由。业务路由均为 GET 查询；写操作不通过查询 API 隐式发生。
 
 启动命令：
 
@@ -224,8 +225,9 @@ uv run uvicorn stock_research_agent.main:app --host 127.0.0.1 --port 8000
 stock-research = "stock_research_agent.cli:app"
 ```
 
-稳定分组为 `securities`、`data`、`tools`、`financials`、`documents`、`rag`、`agent`、
-`report`、`provider`。使用 `uv run stock-research --help` 和分组 `--help` 获取精确参数。
+分组包括 `securities`、`data`、`tools`、`financials`、`documents`、`rag`、`agent`、
+`report`、`provider`、`live`、`evidence`、`snapshot-ingestion` 和
+`research-pipeline`。使用 `uv run stock-research --help` 和分组 `--help` 获取精确参数。
 
 ## 13. Testing 与工程门禁
 
@@ -257,15 +259,20 @@ Raw Data 或完整受限文档。
 |---|---|
 | Stage 1–8 | Completed |
 | Stage 9 — Production Data Provider Governance | Completed / Conditional Go; merged to `main` |
-| Stage 10 — Controlled Live Evidence | Started / Work in Progress / Development Paused; not merged |
+| Stage 10 Offline Production Acceptance | Complete |
+| Stage 10 Gate A | Complete / `GATE_A_COMPLETE` |
+| Gate B Engineering | Partially Implemented / Active Engineering Baseline |
+| Gate B Readiness | `NO_GO` |
+| Production Authorization / Execution | `NOT AUTHORIZED` / `NOT EXECUTED` |
+| Stage 11 | `NOT STARTED` |
 
 “Stage completed”表示该阶段工程验收完成，不表示所有外部数据源已经获得生产许可。
 
 ## 16. 当前限制与后续工作
 
-恢复开发时应在 Stage 10 WIP 分支完成 Task 78–80、全量质量门禁和迁移循环，再决定是否合入
-`main`。SEC/Tushare/A 股正文/U.S. EOD/Embedding/模型 Provider 的 Live 工作均需独立授权，
-不能因上传 GitHub 而放宽边界。
+恢复开发时应先解决 Gate B readiness 阻塞并重跑全量离线门禁。SEC/Tushare/A 股正文、
+U.S. EOD、Embedding 和模型 Provider 的 Live 工作均需独立授权，不能因上传 GitHub 而
+放宽边界；Stage 11 保持未开始。
 
 ## 17. License 与免责声明
 

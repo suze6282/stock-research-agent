@@ -6,7 +6,7 @@ import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import Annotated, Any, Literal, cast
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
+from stock_research_agent.cli_datetime import parse_aware_datetime as _parse_aware_datetime
 from stock_research_agent.cli_support import StageFourCliGroup
 from stock_research_agent.config import Settings
 from stock_research_agent.db.repositories.data_access import SqlAlchemyDataAccessRepository
@@ -134,16 +135,6 @@ def _data_resources() -> Iterator[_DataResources]:
     finally:
         if engine is not None:
             engine.dispose()
-
-
-def _parse_aware_datetime(value: str) -> datetime:
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        raise ValueError("invalid aware ISO datetime") from None
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        raise ValueError("invalid aware ISO datetime")
-    return parsed.astimezone(UTC)
 
 
 def _parse_uuid(value: str) -> UUID:

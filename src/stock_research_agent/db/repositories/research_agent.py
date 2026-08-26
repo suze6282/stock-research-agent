@@ -435,6 +435,7 @@ class SqlAlchemyResearchAgentRepository:
         row = ResearchObservation(
             id=value.id,
             research_agent_run_id=value.run_id,
+            research_step_id=value.research_step_id,
             invocation_id=value.invocation_id,
             observation_type=value.observation_type.value,
             status=value.status.value,
@@ -860,6 +861,7 @@ def _observation_record(row: ResearchObservation) -> ResearchObservationRecord:
         {
             "id": row.id,
             "run_id": row.research_agent_run_id,
+            "research_step_id": row.research_step_id,
             "invocation_id": row.invocation_id,
             "observation_type": row.observation_type,
             "status": row.status,

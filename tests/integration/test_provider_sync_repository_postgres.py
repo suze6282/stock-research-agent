@@ -5,6 +5,7 @@ import sys
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from uuid import UUID
 
 import pytest
 from alembic import command
@@ -12,11 +13,14 @@ from alembic.config import Config
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
+from stock_research_agent.db.models import ProviderRequestAttempt
 from stock_research_agent.db.repositories.providers import (
+    ProviderRepositoryConflict,
     SqlAlchemyProviderDefinitionRepository,
     SqlAlchemyProviderGovernanceRepository,
     SqlAlchemyProviderSyncRepository,
 )
+from stock_research_agent.domain.providers import sync as sync_contracts
 from stock_research_agent.domain.providers.capabilities import ProviderCapabilityWrite
 from stock_research_agent.domain.providers.enums import (
     ProviderCapabilityStatus,
@@ -225,3 +229,131 @@ def test_sync_repository_persists_idempotent_request_plan_run_and_attempt(
         == attempt.id
     )
     assert session.in_transaction()
+
+
+def _attempt_lineage(session: Session) -> tuple[SqlAlchemyProviderSyncRepository, object]:
+    definition, capability, policy, license_policy = _governance(session)
+    repository = SqlAlchemyProviderSyncRepository(session)
+    request = repository.create_request(
+        ProviderSyncRequestWrite(
+            provider_definition_id=definition.id,
+            provider_capability_id=capability.id,
+            policy_id=policy.id,
+            license_policy_id=license_policy.id,
+            credential_reference_id=None,
+            security_id=None,
+            universe_code="ATTEMPT_TEST_UNIVERSE",
+            research_as_of_time=datetime(2026, 8, 20, tzinfo=UTC),
+            range_start=date(2026, 8, 20),
+            range_end=date(2026, 8, 20),
+            execution_mode=ProviderExecutionMode.OFFLINE,
+            scope={"universe_code": "ATTEMPT_TEST_UNIVERSE"},
+            budget={
+                "max_requests": 1,
+                "max_bytes": 1_000_000,
+                "max_attempts": 1,
+                "max_duration_seconds": 60,
+            },
+            request_checksum="8" * 64,
+            idempotency_key="9" * 64,
+        )
+    )
+    plan = repository.add_plan(
+        ProviderSyncPlanWrite(
+            sync_request_id=request.id,
+            adapter_version="1.0.0",
+            checkpoint_revision=None,
+            slices=({"slice_id": "ATTEMPT_ONE"},),
+            plan_checksum="a" * 64,
+        )
+    )
+    run = repository.create_run(
+        ProviderSyncRunWrite(
+            sync_request_id=request.id,
+            sync_plan_id=plan.id,
+            provider_definition_id=definition.id,
+            provider_capability_id=capability.id,
+        )
+    )
+    return repository, run
+
+
+def _attempt_write(run_id: object) -> ProviderRequestAttemptWrite:
+    return ProviderRequestAttemptWrite(
+        sync_run_id=run_id,
+        slice_id="ATTEMPT_ONE",
+        attempt_number=1,
+        status=ProviderSyncSliceStatus.PENDING,
+        endpoint_id="OFFLINE_FIXTURE",
+        response_status_code=None,
+        response_bytes=0,
+        started_at=datetime(2026, 8, 20, tzinfo=UTC),
+    )
+
+
+def test_attempt_repository_accepts_preallocated_id_and_settles_same_row(
+    session: Session,
+) -> None:
+    reservation_type = sync_contracts.ProviderRequestAttemptReservation
+    settlement_type = sync_contracts.ProviderRequestAttemptSettlement
+    repository, run = _attempt_lineage(session)
+    attempt_id = UUID("80000000-0000-0000-0000-000000000001")
+
+    reserved = repository.reserve_attempt(
+        reservation_type(id=attempt_id, value=_attempt_write(run.id))
+    )
+    settled = repository.settle_attempt(
+        settlement_type(
+            id=attempt_id,
+            status=ProviderSyncSliceStatus.COMPLETED,
+            response_status_code=200,
+            response_bytes=128,
+            completed_at=datetime(2026, 8, 20, 0, 0, 1, tzinfo=UTC),
+            safe_error_code=None,
+        )
+    )
+
+    assert reserved.id == attempt_id
+    assert settled.id == attempt_id
+    assert settled.status is ProviderSyncSliceStatus.COMPLETED
+    assert settled.response_status_code == 200
+    assert settled.response_bytes == 128
+
+
+def test_attempt_settlement_is_idempotent_and_conflict_fails_closed(
+    session: Session,
+) -> None:
+    reservation_type = sync_contracts.ProviderRequestAttemptReservation
+    settlement_type = sync_contracts.ProviderRequestAttemptSettlement
+    repository, run = _attempt_lineage(session)
+    attempt_id = UUID("80000000-0000-0000-0000-000000000002")
+    repository.reserve_attempt(reservation_type(id=attempt_id, value=_attempt_write(run.id)))
+    settlement = settlement_type(
+        id=attempt_id,
+        status=ProviderSyncSliceStatus.BLOCKED,
+        response_status_code=429,
+        response_bytes=0,
+        completed_at=datetime(2026, 8, 20, 0, 0, 1, tzinfo=UTC),
+        safe_error_code="SEC_HTTP_429_ABORT",
+    )
+
+    first = repository.settle_attempt(settlement)
+    assert repository.settle_attempt(settlement) == first
+    with pytest.raises(
+        ProviderRepositoryConflict,
+        match="PROVIDER_ATTEMPT_SETTLEMENT_CONFLICT",
+    ):
+        repository.settle_attempt(settlement.model_copy(update={"response_status_code": 503}))
+
+
+def test_attempt_reservation_rolls_back_with_caller_transaction(session: Session) -> None:
+    reservation_type = sync_contracts.ProviderRequestAttemptReservation
+    repository, run = _attempt_lineage(session)
+    attempt_id = UUID("80000000-0000-0000-0000-000000000003")
+    savepoint = session.begin_nested()
+
+    repository.reserve_attempt(reservation_type(id=attempt_id, value=_attempt_write(run.id)))
+    savepoint.rollback()
+    session.expire_all()
+
+    assert session.get(ProviderRequestAttempt, attempt_id) is None

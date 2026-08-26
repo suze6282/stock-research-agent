@@ -66,6 +66,8 @@ class FakeSnapshots:
             status=status,
             security_id=security_id,
             research_as_of_time=snapshot_as_of,
+            completed_at=(AS_OF if status in {"COMPLETE", "PARTIAL", "SUPERSEDED"} else None),
+            checksum=("a" * 64 if status in {"COMPLETE", "PARTIAL", "SUPERSEDED"} else None),
         )
         self.requested: list[UUID] = []
 
@@ -138,6 +140,18 @@ def test_preflight_persists_exact_security_snapshot_policy_and_catalog() -> None
     assert repository.added == [result]
 
 
+def test_preflight_accepts_sealed_partial_snapshot_for_controlled_degraded_execution() -> None:
+    repository = FakeRequestRepository()
+
+    result = _service(
+        repository=repository,
+        snapshots=FakeSnapshots(status="PARTIAL"),
+    ).create(_command())
+
+    assert result.snapshot_id == SNAPSHOT_ID
+    assert repository.added == [result]
+
+
 @pytest.mark.parametrize("status", ["AMBIGUOUS", "NOT_FOUND", "INVALID_QUERY"])
 def test_preflight_rejects_non_unique_security_resolution(status: str) -> None:
     requests = _requests()
@@ -151,7 +165,6 @@ def test_preflight_rejects_non_unique_security_resolution(status: str) -> None:
 @pytest.mark.parametrize(
     ("snapshots", "code"),
     [
-        (FakeSnapshots(status="PARTIAL"), "SNAPSHOT_NOT_COMPLETE"),
         (
             FakeSnapshots(security_id=OTHER_SECURITY_ID),
             "SNAPSHOT_SECURITY_MISMATCH",
@@ -169,6 +182,16 @@ def test_preflight_rejects_ineligible_snapshot(snapshots: object, code: str) -> 
         _service(snapshots=snapshots).create(_command())
 
     assert raised.value.code == code
+
+
+@pytest.mark.parametrize("status", ["BUILDING", "FAILED", "SUPERSEDED"])
+def test_preflight_rejects_unsealed_or_historical_snapshot_for_new_request(
+    status: str,
+) -> None:
+    requests = _requests()
+
+    with pytest.raises(requests.ResearchRequestError):
+        _service(snapshots=FakeSnapshots(status=status)).create(_command())
 
 
 def test_preflight_rejects_budget_expansion_instead_of_clamping() -> None:

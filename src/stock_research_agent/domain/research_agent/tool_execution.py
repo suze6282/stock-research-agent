@@ -181,6 +181,7 @@ class ResearchToolExecutor:
             observation = self._observations.build(
                 observation_id=self._id_factory(),
                 context=context,
+                research_step_id=step.id,
                 invocation_id=record.id,
                 observation_type=observation_type,
                 status=observation_status,

@@ -39,6 +39,7 @@ class ResearchObservationBuilder:
         *,
         observation_id: UUID,
         context: ControlledRunContext,
+        research_step_id: UUID,
         invocation_id: UUID,
         observation_type: ObservationType,
         status: ObservationStatus,
@@ -68,6 +69,7 @@ class ResearchObservationBuilder:
             return ResearchObservationWrite(
                 id=observation_id,
                 run_id=context.research_agent_run_id,
+                research_step_id=research_step_id,
                 invocation_id=invocation_id,
                 observation_type=observation_type,
                 status=status,

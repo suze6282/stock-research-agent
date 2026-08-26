@@ -32,6 +32,41 @@ class ProviderCredentialExecutionRequest(FrozenProviderContract):
     live_authorized: bool
 
 
+class ProviderRequestIdentityExecutionRequest(FrozenProviderContract):
+    provider_definition_id: UUID
+    credential_reference_id: UUID
+    declared_name: str = Field(pattern=r"^[A-Z][A-Z0-9_]{2,63}$")
+    license_allowed: bool
+    configuration_allowed: bool
+    live_authorized: bool
+
+
+class ProtectedRequestIdentity:
+    """Ephemeral provider identity exposed only to final HTTP header emission."""
+
+    __slots__ = ("__value",)
+
+    def __init__(self, value: str) -> None:
+        if not 1 <= len(value) <= 256 or any(
+            ord(character) < 32 or ord(character) == 127 for character in value
+        ):
+            raise ValueError("SEC_CONTACT_IDENTITY_INVALID")
+        self.__value = value
+
+    def __repr__(self) -> str:
+        return "<ProtectedRequestIdentity redacted>"
+
+    __str__ = __repr__
+
+    def __reduce__(self) -> NoReturn:
+        raise TypeError("ProtectedRequestIdentity cannot be serialized")
+
+    def _emit_user_agent(self) -> str:
+        """Return the value only to the protected HTTP emission boundary."""
+
+        return self.__value
+
+
 class ResolvedCredentialContext:
     """Ephemeral credential binding; deliberately not serializable or printable."""
 
@@ -123,6 +158,40 @@ class EnvironmentCredentialResolver:
             request.binding_name,
             value,
         )
+
+    def resolve_request_identity(
+        self,
+        reference: CredentialReferenceRecord,
+        request: ProviderRequestIdentityExecutionRequest,
+    ) -> ProtectedRequestIdentity:
+        checks = (
+            (not request.license_allowed, "CREDENTIAL_LICENSE_GATE_REQUIRED"),
+            (not request.configuration_allowed, "CREDENTIAL_CONFIGURATION_GATE_REQUIRED"),
+            (not request.live_authorized, "CREDENTIAL_LIVE_AUTHORIZATION_REQUIRED"),
+            (
+                request.provider_definition_id != reference.provider_definition_id,
+                "CREDENTIAL_PROVIDER_MISMATCH",
+            ),
+            (
+                request.credential_reference_id != reference.id,
+                "CREDENTIAL_REFERENCE_MISMATCH",
+            ),
+            (
+                reference.resolver_kind is not CredentialResolverKind.ENVIRONMENT,
+                "CREDENTIAL_RESOLVER_KIND_UNSUPPORTED",
+            ),
+            (
+                request.declared_name != reference.declared_name,
+                "CREDENTIAL_NAME_NOT_DECLARED",
+            ),
+        )
+        for failed, reason in checks:
+            if failed:
+                raise ValueError(reason)
+        value = self._environment.get(request.declared_name)
+        if value is None:
+            raise ValueError("CREDENTIAL_NOT_CONFIGURED")
+        return ProtectedRequestIdentity(value)
 
 
 def _binding_allowed(kind: CredentialBindingKind, name: str) -> bool:

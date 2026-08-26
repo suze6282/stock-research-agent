@@ -15,7 +15,8 @@ git branch -vv
 ```
 
 - [ ] 默认公开分支是稳定 `main`；
-- [ ] Stage 9 的稳定文件树已在 `main`，Stage 10 WIP 未意外合入 `main`；
+- [ ] Public candidate 的 parent 仍是批准的 `a113bcba`，没有导入 Engineering commits；
+- [ ] Stage 10 Gate A 与部分 Gate B engineering 文件是经过分类和清洗的文件同步；
 - [ ] 工作区没有来源不明的修改；
 - [ ] 待上传提交和未跟踪文件均经过人工审阅；
 - [ ] 没有 stash/reset/restore/clean 覆盖用户工作；
@@ -172,8 +173,11 @@ temp/
 - [ ] README 适合 3–5 分钟理解项目；
 - [ ] Stage 1–8 写为 Completed；
 - [ ] Stage 9 写为 Completed / Conditional Go，而不是 Production Ready；
-- [ ] Stage 10 写为 Started / Work in Progress / Development Paused；
-- [ ] Stage 10 没有写 Complete，Tasks 78–80 明确未完成；
+- [ ] Stage 10 Offline Production Acceptance 与 Gate A 写为 Complete；
+- [ ] Gate B Engineering 写为 Partially Implemented / Active Engineering Baseline；
+- [ ] Gate B Readiness 写为 `NO_GO`；
+- [ ] Production Authorization / Live Execution 写为 `NOT AUTHORIZED` / `NOT EXECUTED`；
+- [ ] Stage 11 写为 `NOT STARTED`；
 - [ ] Synthetic 没有写成 Live；
 - [ ] Fixture 没有写成 Production；
 - [ ] SEC metadata 没有写成 filing body；
@@ -231,8 +235,8 @@ uv run alembic current
 在项目所有者明确批准前：
 
 - [ ] 没有 `git push`；
-- [ ] 没有创建 Git remote；
+- [ ] `origin` 只用于读取批准的 Public baseline；没有新增或改写 remote；
 - [ ] 没有安装或登录 GitHub CLI；
 - [ ] 没有创建 GitHub repository、PR、Tag 或 Release；
-- [ ] 没有合并 Stage 10 到 `main`；
-- [ ] 文档分支修改保持未提交，等待人工差异审阅。
+- [ ] 没有把 Engineering Git history 合并到 Public Repository；
+- [ ] Public update branch 修改保持未提交，等待人工差异审阅。

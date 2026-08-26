@@ -133,6 +133,21 @@ cost, database impact and rollback. Only the exact phrase
 `批准执行该Provider的有限Live验证` authorizes one bounded validation. SEC approval
 does not authorize Tushare. Without it, status is `NOT_ATTEMPTED`, not PASS.
 
-Stage 9 acceptance uses `-W error`, zero unexplained skips/warnings, PostgreSQL
-migration replay and offline fixtures. Its expected conclusion is `CONDITIONAL GO`;
-the suite does not authorize Stage 10.
+Stage 9 acceptance remains a preserved regression baseline.
+
+# Stage 10 Gate A testing
+
+Default `uv run pytest -W error` remains fully offline except for the isolated
+loopback PostgreSQL test database. Non-loopback DNS/socket, Provider transports,
+Credential resolution, SEC, Tushare, exchange, EOD, Embedding and model calls are
+blocked. `tests_live` is excluded from default pytest and CI; without separate
+Gate B authorization its result is `NOT_ATTEMPTED`, never PASS.
+
+Stage 10 covers finite authorization and atomic budgets, manual import state and
+file security, immutable Raw Artifact/Manifest/Snapshot lineage, Agent/Report
+boundaries, GET-only API, read-only Tools, migration replay and rollback. Fixtures
+must contain all four markers: `SYNTHETIC_TEST_ONLY`, `NOT_COMPANY_EVIDENCE`,
+`OFFLINE`, and `NOT_LIVE`; text fixtures use LF and verified checksums.
+
+The final Task 80 regression completed with 2980 passed, 0 failed, 0 errors,
+0 skipped and 0 warnings in 501.06 seconds after all documentation changes.

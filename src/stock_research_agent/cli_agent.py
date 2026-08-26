@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
+from stock_research_agent.cli_datetime import parse_aware_datetime
 from stock_research_agent.config import Settings
 from stock_research_agent.db.repositories.data_access import SqlAlchemyDataAccessRepository
 from stock_research_agent.db.repositories.financials import SqlAlchemyFinancialRepository
@@ -36,12 +37,23 @@ from stock_research_agent.domain.financials.queries import FinancialQueryService
 from stock_research_agent.domain.research_agent.application import (
     DeterministicResearchExecutionService,
 )
+from stock_research_agent.domain.research_agent.claim_pipeline import (
+    ProductionDeterministicClaimPipeline,
+)
+from stock_research_agent.domain.research_agent.claims import (
+    ClaimSupportValidator,
+    DeterministicClaimBuilder,
+)
 from stock_research_agent.domain.research_agent.enums import (
     ResearchMode,
     ResearchRunStatus,
     ResearchSection,
     ResearchStepStatus,
     ResearchType,
+)
+from stock_research_agent.domain.research_agent.evidence import EvidenceLedgerService
+from stock_research_agent.domain.research_agent.evidence_adapters import (
+    ProductionObservationEvidenceAdapter,
 )
 from stock_research_agent.domain.research_agent.idempotency import (
     research_run_idempotency_key,
@@ -216,6 +228,10 @@ def _create_planned_run(
         now=_now,
     ).create(command)
     policy = policies.require(command.policy_version)
+    snapshot = resources.data.get_snapshot(request.snapshot_id)
+    if snapshot is None:
+        raise LookupError("SNAPSHOT_NOT_FOUND")
+    warning_codes = ("AGENT_SNAPSHOT_PARTIAL",) if snapshot.status == "PARTIAL" else ()
     idempotency_key = research_run_idempotency_key(
         normalized_request=request.normalized_security_query,
         security_id=request.resolved_security_id,
@@ -242,6 +258,7 @@ def _create_planned_run(
             tool_catalog_checksum=request.tool_catalog_checksum,
             idempotency_key=idempotency_key,
             budget=_budget(policy),
+            warning_codes=warning_codes,
             created_at=now,
             updated_at=now,
         )
@@ -292,6 +309,19 @@ def _execution_service(
             create_tool_registry(DataAccessQueryService(resources.data)),
             create_financial_tool_registry(FinancialQueryService(resources.financials)),
             create_rag_tool_registry(PrecomputedRetrievalQueryService(resources.knowledge)),
+        ),
+        security_master=resources.securities,
+        evidence_adapter=ProductionObservationEvidenceAdapter(
+            snapshots=resources.data,
+            ledger=EvidenceLedgerService(),
+            id_factory=uuid4,
+            clock=_now,
+        ),
+        claim_pipeline=ProductionDeterministicClaimPipeline(
+            repository=resources.research,
+            builder=DeterministicClaimBuilder(id_factory=uuid4),
+            validator=ClaimSupportValidator(id_factory=uuid4),
+            clock=_now,
         ),
         id_factory=uuid4,
         clock=_now,
@@ -375,15 +405,25 @@ def _plan_or_run(
     security_query: str,
     research_type: ResearchType,
     snapshot_id: UUID,
-    as_of: datetime,
+    as_of: str,
     policy_version: str,
     json_output: bool,
 ) -> None:
     try:
+        parsed_as_of = parse_aware_datetime(as_of)
+    except ValueError:
+        _fail("AS_OF_MUST_BE_AWARE_ISO_8601", code=2)
+    try:
         with _resources() as resources:
             run, request, policy, catalog = _create_planned_run(
                 resources,
-                _command(security_query, research_type, snapshot_id, as_of, policy_version),
+                _command(
+                    security_query,
+                    research_type,
+                    snapshot_id,
+                    parsed_as_of,
+                    policy_version,
+                ),
             )
             if execute and run.status is ResearchRunStatus.PLANNED:
                 run, _package = _execution_service(resources).execute(
@@ -407,7 +447,7 @@ def plan(
     security_query: Annotated[str, typer.Argument()],
     research_type: Annotated[ResearchType, typer.Option("--type")],
     snapshot_id: Annotated[UUID, typer.Option("--snapshot")],
-    as_of: Annotated[datetime, typer.Option("--as-of")],
+    as_of: Annotated[str, typer.Option("--as-of")],
     policy_version: Annotated[str, typer.Option("--policy")],
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
@@ -428,7 +468,7 @@ def run(
     security_query: Annotated[str, typer.Argument()],
     research_type: Annotated[ResearchType, typer.Option("--type")],
     snapshot_id: Annotated[UUID, typer.Option("--snapshot")],
-    as_of: Annotated[datetime, typer.Option("--as-of")],
+    as_of: Annotated[str, typer.Option("--as-of")],
     policy_version: Annotated[str, typer.Option("--policy")],
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:

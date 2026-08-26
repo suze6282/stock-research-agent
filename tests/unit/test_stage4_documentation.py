@@ -85,7 +85,8 @@ def test_readme_and_agents_describe_the_actual_stage4_boundary() -> None:
     assert "data ingest" in readme
     assert "data snapshot create" in readme
     assert "tools list" in readme
-    assert "stage-10/controlled-live-evidence" in agents
+    assert "Stage 10 Gate A: Complete" in agents
+    assert "Gate B readiness: `NO_GO`" in agents
     assert "stage-8-verifiable-report-reflection-design.md" in agents
     assert "API and registered Research Run query Tools are strictly read-only" in agents
 

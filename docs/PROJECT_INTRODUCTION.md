@@ -133,9 +133,13 @@ Cache、Sync、Checkpoint、Raw Artifact、Manifest、Quality、Health、API、T
 - **Stage 9：Completed / Conditional Go。** 77/77 个离线工程任务、两轮 Reflection、
   PostgreSQL 验证与实施报告已完成，并以等价文件树合入 `main`。SEC Live 仍为
   `CONDITIONAL / NOT_ATTEMPTED`，其他生产 Provider 仍可能 `BLOCKED`。
-- **Stage 10：Started / Work in Progress / Development Paused。** 独立分支
-  `stage-10/controlled-live-evidence` 已完成 Task 0–77 并保存 WIP checkpoint；Task
-  78–80、最终实现报告和 Gate A 验收尚未完成，也未合入 `main`。
+- **Stage 10 Offline Production Acceptance：Complete。** 离线验收链已经完成。
+- **Gate A：Complete / `GATE_A_COMPLETE`。** 这只代表离线工程验收，不授权 Live。
+- **Gate B Engineering：Partially Implemented / Active Engineering Baseline。** 已有
+  授权结构、request identity、SEC transport、安全 artifact/audit 与 attempt reservation
+  等代码，但 readiness 仍为 `NO_GO`。
+- **Production Authorization：`NOT AUTHORIZED`；Production Live Execution：
+  `NOT EXECUTED`；Stage 11：`NOT STARTED`。**
 
 因此，项目不能描述为 `Production Ready`、`Live Data Fully Supported` 或完整覆盖 A 股与
 美股生产数据。

@@ -80,6 +80,7 @@ EXPECTED_COLUMNS = {
         "provider_definition_id",
         "provider_capability_id",
         "authorization_id",
+        "live_authorization_grant_id",
         "status",
         "max_requests",
         "max_bytes",

@@ -1,0 +1,35 @@
+{
+  "schema_version": "stage10-synthetic-security-fixtures-v1",
+  "markers": [
+    "SYNTHETIC_TEST_ONLY",
+    "NOT_COMPANY_EVIDENCE",
+    "NOT_PROVIDER_DATA",
+    "OFFLINE",
+    "NOT_LIVE"
+  ],
+  "license": "PROJECT_TEST_FIXTURE_ONLY",
+  "authorization_or_use_restrictions": "No company evidence or production validation use",
+  "fixtures": [
+    {
+      "filename": "active-action.pdf",
+      "content_type": "application/pdf",
+      "byte_size": 160,
+      "checksum": "678b53b0c90f15a12625b2428795231df33ed799324d319dded1607afa0b3f81",
+      "purpose": "PDF active-action rejection"
+    },
+    {
+      "filename": "active-resource.html",
+      "content_type": "text/html",
+      "byte_size": 88,
+      "checksum": "c98ad998448b85916f55bb6c9a805d2a3d80826d6c2ed0717c10d58f0513d4d7",
+      "purpose": "HTML script rejection"
+    },
+    {
+      "filename": "bounded-attack.json",
+      "content_type": "application/json",
+      "byte_size": 95,
+      "checksum": "2b6672209db47c0494eaab0204eae3f41e2069aa930526b0caefd3ddf6901ef6",
+      "purpose": "JSON duplicate-key rejection"
+    }
+  ]
+}

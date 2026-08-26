@@ -142,3 +142,21 @@ def test_license_policy_rejects_invalid_review_window() -> None:
 
     with pytest.raises(ValidationError):
         licenses.SourceLicensePolicyRecord(**values)
+
+
+def test_gate_b_operational_terms_source_codes_satisfy_existing_validation() -> None:
+    licenses = _licenses()
+    values = _approved_policy(licenses).model_dump()
+    values["terms_source_ids"] = (
+        "SEC_ACCESSING_EDGAR_DATA",
+        "SEC_DEVELOPER_RESOURCES",
+        "SEC_PRIVACY_SECURITY_POLICY",
+    )
+
+    policy = licenses.SourceLicensePolicyRecord.model_validate(values)
+
+    assert policy.terms_source_ids == (
+        "SEC_ACCESSING_EDGAR_DATA",
+        "SEC_DEVELOPER_RESOURCES",
+        "SEC_PRIVACY_SECURITY_POLICY",
+    )

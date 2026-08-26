@@ -377,6 +377,24 @@ def test_build_manifest_requires_matching_validated_issuer_identity_evidence() -
     assert raised.value.code == "ISSUER_IDENTITY_MISMATCH"
 
 
+@pytest.mark.parametrize("identity_count", [0, 2])
+def test_build_manifest_requires_exactly_one_valid_identity_evidence(
+    identity_count: int,
+) -> None:
+    """RED-014: missing or duplicate canonical identity fails closed."""
+    report_types = _report_types()
+    bundle = _bundle(report_types)
+    identities = tuple(bundle.evidence[1] for _ in range(identity_count))
+
+    verification = import_module("stock_research_agent.domain.reports.input_verification")
+    with pytest.raises(report_types.ReportInputValidationError) as raised:
+        verification._validate_issuer_identity(
+            bundle.model_copy(update={"evidence": (bundle.evidence[0], *identities)})
+        )
+
+    assert raised.value.code == "ISSUER_IDENTITY_MISMATCH"
+
+
 @pytest.mark.parametrize(
     ("mutator", "code"),
     [

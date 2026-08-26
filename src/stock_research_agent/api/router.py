@@ -4,6 +4,7 @@ from stock_research_agent.api.routes.data import router as data_router
 from stock_research_agent.api.routes.financials import router as financials_router
 from stock_research_agent.api.routes.health import create_health_router
 from stock_research_agent.api.routes.issuers import router as issuers_router
+from stock_research_agent.api.routes.live_evidence import router as live_evidence_router
 from stock_research_agent.api.routes.providers import router as providers_router
 from stock_research_agent.api.routes.rag import router as rag_router
 from stock_research_agent.api.routes.reports import router as reports_router
@@ -27,4 +28,5 @@ def create_api_router(settings: Settings) -> APIRouter:
     router.include_router(research_agent_router)
     router.include_router(reports_router)
     router.include_router(providers_router)
+    router.include_router(live_evidence_router)
     return router

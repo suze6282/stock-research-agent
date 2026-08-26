@@ -168,5 +168,23 @@ Foreign keys use `RESTRICT` where deleting governance or historical evidence wou
 break lineage. Immutable and append-only records are protected by constraints and
 triggers; terminal/historical rows are not rewritten. The required replay is
 `0008 → 0007 → 0008`, which removes/recreates only Stage 9 structures. Application
-rollback reverts Stage 9 commits without rewriting earlier migrations. The current
-engineering conclusion is `CONDITIONAL GO`; no database change authorizes Stage 10.
+rollback reverts Stage 9 commits without rewriting earlier migrations.
+
+# Stage 10 Gate A database migration
+
+Revision `0009_controlled_live_evidence` adds 15 purpose-specific tables:
+`live_authorization_grants`, `live_authorization_events`,
+`live_authorization_consumptions`, `live_execution_approvals`,
+`manual_evidence_import_requests`, `manual_evidence_source_declarations`,
+`manual_evidence_validations`, `manual_evidence_reviews`,
+`evidence_ingestion_manifests`, `ingestion_to_snapshot_bindings`,
+`real_company_validation_runs`, `end_to_end_research_validations`,
+`evidence_retention_actions`, `live_incidents`, and `live_incident_events`.
+
+The migration also gives `raw_payloads` an exactly-one Provider-request/manual-
+request source contract, expands the bounded document size to 25 MiB, and links
+Stage 9 Live validation to an optional finite authorization grant. All historical
+and ownership foreign keys use `RESTRICT`; append-only and terminal records have
+PostgreSQL triggers. Stage 10 timestamps use timezone-aware types. Downgrade removes
+only Stage 10 objects and restores the Stage 9 schema; it never contacts a network,
+reads a Credential, inserts a Grant, or imports evidence.

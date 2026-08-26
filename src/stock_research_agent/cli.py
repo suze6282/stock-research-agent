@@ -14,10 +14,14 @@ from stock_research_agent import __version__
 from stock_research_agent.cli_agent import agent_app
 from stock_research_agent.cli_data import data_app
 from stock_research_agent.cli_documents import documents_app
+from stock_research_agent.cli_evidence import evidence_app
 from stock_research_agent.cli_financials import financials_app
+from stock_research_agent.cli_live import live_app
 from stock_research_agent.cli_providers import provider_app
 from stock_research_agent.cli_rag import rag_app
 from stock_research_agent.cli_reports import report_app
+from stock_research_agent.cli_research_pipeline import research_pipeline_app
+from stock_research_agent.cli_snapshot_ingestion import snapshot_ingestion_app
 from stock_research_agent.cli_tools import tools_app
 from stock_research_agent.config import AppEnvironment, Settings
 from stock_research_agent.db.repositories.security_master import (
@@ -54,6 +58,10 @@ app.add_typer(rag_app, name="rag")
 app.add_typer(agent_app, name="agent")
 app.add_typer(report_app, name="report")
 app.add_typer(provider_app, name="provider")
+app.add_typer(live_app, name="live")
+app.add_typer(evidence_app, name="evidence")
+app.add_typer(snapshot_ingestion_app, name="snapshot-ingestion")
+app.add_typer(research_pipeline_app, name="research-pipeline")
 settings_factory: Callable[[], Settings] = Settings
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 _CHECKOUT_ALEMBIC_INI = _PROJECT_ROOT / "alembic.ini"

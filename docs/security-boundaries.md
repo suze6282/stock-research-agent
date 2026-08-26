@@ -74,5 +74,25 @@ ephemerally, redacted from errors/logs and never stored with artifacts. The
 invariant is: default tests are offline and block all non-loopback DNS/socket
 access. Tool and GET API
 remain read-only; CLI control requires exact context and confirmation. Live status
-stays `NOT_ATTEMPTED` without a separate approval. Stage 9 is `CONDITIONAL GO` and
-does not authorize Stage 10.
+stays `NOT_ATTEMPTED` without a separate approval. Stage 9 remains the preserved
+Provider security baseline.
+
+# Stage 10 Gate A security boundary
+
+Gate A does not resolve or read a Provider Credential/contact value and constructs
+no production transport. Gate B remains separately authorized and
+`NOT_ATTEMPTED`. A finite grant freezes Provider, capability, Security, official
+domains, methods, Credential Reference, policy versions, request/byte/time budgets
+and expiry; a checksum-bound single-use execution approval cannot expand it.
+
+Controlled manual evidence follows plan → receive → quarantine → validate → review
+→ approve/reject → ingest. Paths remain inbox-relative and root-safe. PDF active
+actions/attachments/encryption, HTML active or external resources, JSON duplicate/
+deep/oversized structures, MIME/magic mismatch, executables and archives fail
+closed. Files are non-empty and bounded to 25 MiB; OCR, rendering, link following,
+scripts, local file URLs and network access are prohibited.
+
+Unverified or synthetic evidence cannot support a real-company Claim, VALID
+Citation or publishable Report. Historical Artifacts, Manifests, Snapshots,
+Research Runs and Reports remain immutable. Retention/deletion keeps lineage and
+append-only incident evidence; API and query Tools are read-only.

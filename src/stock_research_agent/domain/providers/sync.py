@@ -315,9 +315,53 @@ class ProviderRequestAttemptWrite(FrozenProviderContract):
     safe_error_code: str | None = Field(default=None, max_length=128)
 
 
-class ProviderRequestAttemptRecord(ProviderRequestAttemptWrite):
+class ProviderRequestAttemptRecord(FrozenProviderContract):
     id: UUID
+    sync_run_id: UUID
+    slice_id: str = Field(min_length=1, max_length=64)
+    attempt_number: int = Field(ge=1, le=4)
+    status: ProviderSyncSliceStatus
+    endpoint_id: str = Field(min_length=1, max_length=128)
+    response_status_code: int | None = Field(default=None, ge=100, le=599)
+    response_bytes: int = Field(ge=0)
+    started_at: AwareUtcDateTime
+    completed_at: AwareUtcDateTime | None = None
+    safe_error_code: str | None = Field(default=None, max_length=128)
     created_at: AwareUtcDateTime
+
+
+class ProviderRequestAttemptReservation(FrozenProviderContract):
+    id: UUID
+    value: ProviderRequestAttemptWrite
+
+    @model_validator(mode="after")
+    def validate_pending_reservation(self) -> ProviderRequestAttemptReservation:
+        if self.value.status is not ProviderSyncSliceStatus.PENDING:
+            raise ValueError("PROVIDER_ATTEMPT_RESERVATION_NOT_PENDING")
+        if self.value.completed_at is not None:
+            raise ValueError("PROVIDER_ATTEMPT_RESERVATION_ALREADY_COMPLETED")
+        return self
+
+
+class ProviderRequestAttemptSettlement(FrozenProviderContract):
+    id: UUID
+    status: ProviderSyncSliceStatus
+    response_status_code: int | None = Field(default=None, ge=100, le=599)
+    response_bytes: int = Field(ge=0)
+    completed_at: AwareUtcDateTime
+    safe_error_code: str | None = Field(default=None, max_length=128)
+
+    @model_validator(mode="after")
+    def validate_terminal_settlement(self) -> ProviderRequestAttemptSettlement:
+        if self.status not in {
+            ProviderSyncSliceStatus.COMPLETED,
+            ProviderSyncSliceStatus.PARTIAL,
+            ProviderSyncSliceStatus.BLOCKED,
+            ProviderSyncSliceStatus.FAILED,
+            ProviderSyncSliceStatus.CANCELLED,
+        }:
+            raise ValueError("PROVIDER_ATTEMPT_SETTLEMENT_NOT_TERMINAL")
+        return self
 
 
 _SQL = re.compile(r"(?i)\b(?:select|insert|update|delete|drop|alter|create)\b")

@@ -8,8 +8,11 @@ authorize changes in the private development repository.
 - Stage 1–8: Completed.
 - Stage 9: Completed / Conditional Go on `stage-9/production-data-providers`; offline
   governance is complete, while Live authorization remains separate.
-- Stage 10: Started / Work in Progress / Development Paused on
-  `stage-10/controlled-live-evidence`; it is not complete and is not merged into `main`.
+- Stage 10 Offline Production Acceptance and Stage 10 Gate A: Complete.
+- Gate B engineering: Partially implemented / active engineering baseline.
+- Gate B readiness: `NO_GO`; Production Authorization is `NOT AUTHORIZED` and
+  Production Live Execution is `NOT EXECUTED`.
+- Stage 11: `NOT STARTED`.
 - Do not continue Stage 9 or Stage 10 feature work during public-release preparation.
 - Do not implement directly on `main`.
 
@@ -38,6 +41,8 @@ claim is treated as supported.
 - Public Provider validation remains `NOT_ATTEMPTED` unless a separate approved process
   records otherwise.
 - 不得读取真实Provider凭证；不得创建Snapshot；不得运行Agent；不得生成Report。
+- A future SEC production pilot requires the exact separate approval phrase
+  `批准执行该SEC有限Live验证`; it is not granted by public-export work.
 - There is no model-backed investment recommendation, no target price, no automatic trading,
   and no broker execution.
 - `PUBLISHABLE` is an internal engineering gate, not investment advice or public-release

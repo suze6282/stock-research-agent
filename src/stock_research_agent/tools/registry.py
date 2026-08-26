@@ -55,6 +55,10 @@ from stock_research_agent.tools.schemas import (
     ToolProvenance,
     ToolQuality,
 )
+from stock_research_agent.tools.schemas_live_evidence import (
+    LiveEvidenceReadOutput,
+    LiveEvidenceResourceInput,
+)
 from stock_research_agent.tools.schemas_providers import (
     ProviderCodeInput,
     ProviderCodePageInput,
@@ -128,6 +132,18 @@ _STAGE9_PROVIDER_QUERY_TOOL_NAMES = (
     "list_provider_quality_issues",
     "list_provider_dead_letters",
     "get_provider_readiness",
+)
+_STAGE10_LIVE_EVIDENCE_QUERY_TOOL_NAMES = (
+    "get_live_authorization",
+    "list_live_authorization_events",
+    "list_live_authorization_consumptions",
+    "get_live_execution_approval",
+    "get_manual_evidence_import",
+    "get_evidence_ingestion_manifest",
+    "get_real_company_validation_run",
+    "list_end_to_end_validations",
+    "get_live_incident",
+    "list_live_incident_events",
 )
 
 
@@ -604,6 +620,17 @@ _CANONICAL_TOOL_DEFINITIONS = MappingProxyType(
             output_model=ReportReadOutput,
             snapshot_behavior=SnapshotBehavior.PERSISTED_METADATA,
         ),
+        **{
+            name: CanonicalToolDefinition(
+                version="1.0.0",
+                domain="live_evidence_governance",
+                description=f"Read bounded persisted {name} governance data.",
+                input_model=LiveEvidenceResourceInput,
+                output_model=LiveEvidenceReadOutput,
+                snapshot_behavior=SnapshotBehavior.PERSISTED_METADATA,
+            )
+            for name in _STAGE10_LIVE_EVIDENCE_QUERY_TOOL_NAMES
+        },
     }
 )
 
@@ -1147,6 +1174,7 @@ def create_tool_metadata_registry() -> ToolRegistry:
             *_STAGE7_QUERY_TOOL_NAMES,
             *_STAGE8_REPORT_QUERY_TOOL_NAMES,
             *_STAGE9_PROVIDER_QUERY_TOOL_NAMES,
+            *_STAGE10_LIVE_EVIDENCE_QUERY_TOOL_NAMES,
         }:
             continue
         registry.register(
@@ -1175,7 +1203,11 @@ def create_final_tool_metadata_registry() -> ToolRegistry:
 
     registry = ToolRegistry()
     for name, definition in _CANONICAL_TOOL_DEFINITIONS.items():
-        if name in {*_STAGE8_REPORT_QUERY_TOOL_NAMES, *_STAGE9_PROVIDER_QUERY_TOOL_NAMES}:
+        if name in {
+            *_STAGE8_REPORT_QUERY_TOOL_NAMES,
+            *_STAGE9_PROVIDER_QUERY_TOOL_NAMES,
+            *_STAGE10_LIVE_EVIDENCE_QUERY_TOOL_NAMES,
+        }:
             continue
         registry.register(
             ToolRegistration(
@@ -1203,7 +1235,10 @@ def create_stage8_final_tool_metadata_registry() -> ToolRegistry:
 
     registry = ToolRegistry()
     for name, definition in _CANONICAL_TOOL_DEFINITIONS.items():
-        if name in _STAGE9_PROVIDER_QUERY_TOOL_NAMES:
+        if name in {
+            *_STAGE9_PROVIDER_QUERY_TOOL_NAMES,
+            *_STAGE10_LIVE_EVIDENCE_QUERY_TOOL_NAMES,
+        }:
             continue
         registry.register(
             ToolRegistration(
@@ -1231,6 +1266,8 @@ def create_stage9_final_tool_metadata_registry() -> ToolRegistry:
 
     registry = ToolRegistry()
     for name, definition in _CANONICAL_TOOL_DEFINITIONS.items():
+        if name in _STAGE10_LIVE_EVIDENCE_QUERY_TOOL_NAMES:
+            continue
         registry.register(
             ToolRegistration(
                 metadata=_metadata(
@@ -1347,6 +1384,38 @@ def create_provider_tool_registry(service: object) -> ToolRegistry:
     return registry
 
 
+def create_live_evidence_tool_registry(service: object) -> ToolRegistry:
+    """Compose exactly ten persisted, offline Stage 10 governance queries."""
+
+    from stock_research_agent.domain.live_evidence.queries import LiveEvidenceQueryService
+    from stock_research_agent.tools.live_evidence import LiveEvidenceReadTool
+
+    if not isinstance(service, LiveEvidenceQueryService):
+        raise ToolRegistryError(ToolErrorCode.INVALID_REGISTRATION)
+    registry = ToolRegistry()
+    for name in _STAGE10_LIVE_EVIDENCE_QUERY_TOOL_NAMES:
+        definition = _CANONICAL_TOOL_DEFINITIONS[name]
+        registry.register(
+            ToolRegistration(
+                metadata=_metadata(
+                    name=name,
+                    domain=definition.domain,
+                    description=definition.description,
+                    input_model=definition.input_model,
+                    output_model=definition.output_model,
+                    snapshot_behavior=definition.snapshot_behavior,
+                ),
+                input_model=definition.input_model,
+                output_model=definition.output_model,
+                handler=cast(
+                    Callable[[BaseModel], BaseModel],
+                    LiveEvidenceReadTool(service, cast(Any, name)),
+                ),
+            )
+        )
+    return registry
+
+
 def create_financial_tool_registry(service: object) -> ToolRegistry:
     """Compose the six Stage 5 read-only financial tools."""
 
@@ -1449,6 +1518,7 @@ __all__ = [
     "ToolRegistry",
     "ToolRegistryError",
     "create_provider_tool_registry",
+    "create_live_evidence_tool_registry",
     "create_financial_tool_registry",
     "create_final_tool_metadata_registry",
     "create_rag_tool_registry",

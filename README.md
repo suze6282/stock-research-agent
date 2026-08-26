@@ -4,9 +4,10 @@ An evidence-driven, auditable stock research agent for A-share and U.S. equity r
 
 Stock Research Agent is a backend research system built around point-in-time data,
 controlled tools, explicit evidence, and deterministic release gates. It is not a
-"ticker in, GPT opinion out" wrapper: the stable `main` branch contains an offline-first
-research pipeline through Stage 9, while Stage 10 remains paused work in progress on a
-separate branch.
+"ticker in, GPT opinion out" wrapper. This sanitized engineering export contains the
+offline-first research pipeline through Stage 10 Gate A plus a partial Gate B engineering
+baseline. Gate B readiness remains `NO_GO`; production authorization and execution have
+not occurred.
 
 ## Project Overview
 
@@ -100,7 +101,14 @@ services own controlled writes. PostgreSQL—not SQLite—is the integration bas
 |---|---|---|
 | Stages 1–8 | **Completed** | Backend foundation through verifiable reports, Runtime Reflection, and Release Gate passed their stage acceptance. |
 | Stage 9 — Production Data Provider Governance | **Completed / Conditional Go** | All 77 offline engineering tasks, two Reflection rounds, PostgreSQL checks, and the implementation report are complete and merged into `main`. Live Provider approval is separate and remains conditional or blocked. |
-| Stage 10 — Controlled Live Evidence | **Work in Progress / Development Paused** | Implemented on `stage-10/controlled-live-evidence`; Tasks 0–77 and a local WIP checkpoint exist, but Tasks 78–80 and final Gate A acceptance are incomplete. It is not merged into `main`. |
+| Stage 10 Offline Production Acceptance | **Complete** | The bounded, offline acceptance workflow and its deterministic evidence contracts passed Gate A acceptance. |
+| Stage 10 Gate A | **Complete (`GATE_A_COMPLETE`)** | Offline engineering, quality gates, migration replay, and acceptance evidence are complete. This does not authorize Live activity. |
+| Gate B Engineering | **Partially Implemented / Active Engineering Baseline** | Authorization structures, request identity, SEC transport controls, artifact/audit boundaries, attempt reservation, and fail-closed orchestration exist as engineering code. |
+| Gate B Readiness | **`NO_GO`** | The current readiness review does not permit production execution. |
+| Production Authorization | **`NOT AUTHORIZED`** | No approval phrase or production credential use is implied by this repository. |
+| Production Live Execution | **`NOT EXECUTED`** | No production Provider run, real-company Snapshot, Agent Run, or Report is claimed. |
+| SEC Production Pilot | **Not complete / `NOT_EXECUTED`** | SEC production validation remains a separately authorized future activity. |
+| Stage 11 | **`NOT STARTED`** | No Stage 11 capability is implemented or authorized. |
 
 Stage 9 completion does **not** mean production data coverage is complete. SEC Live is
 `CONDITIONAL / NOT_ATTEMPTED`; Tushare production access, A-share disclosure bodies,
@@ -208,6 +216,17 @@ uv run stock-research provider sync-plan SEC_EDGAR_PUBLIC_V1 SEC_SUBMISSIONS_MET
 uv run stock-research provider live-check SEC_EDGAR_PUBLIC_V1 SEC_SUBMISSIONS_METADATA --help
 ```
 
+Stage 10 control surfaces are also fail-closed. Inspect their contracts without
+authorizing or executing production work:
+
+```powershell
+uv run stock-research live --help
+uv run stock-research evidence --help
+```
+
+Production Authorization is `NOT AUTHORIZED`, Production Live Execution is
+`NOT EXECUTED`, and Gate B readiness is `NO_GO`.
+
 ## Docker Compose
 
 Docker is optional. Compose builds its internal database connection for host `db` and
@@ -277,9 +296,9 @@ to trade.
 
 ## Roadmap
 
-If development is later resumed, the next action is to finish Stage 10 Tasks 78–80 on
-its WIP branch, rerun final acceptance, and only then decide whether it is eligible for
-merge. Live Provider work requires separate, narrowly scoped authorization.
+If development is later resumed, the next action is to resolve the documented Gate B
+readiness blockers and repeat the offline readiness review. Any SEC production pilot
+requires a separate, narrowly scoped authorization; Stage 11 remains out of scope.
 
 ## Disclaimer
 
@@ -296,4 +315,5 @@ No license is currently granted for copying, modifying, redistributing, sublicen
 commercial use of the source code unless explicitly permitted by the repository owner.
 
 A formal open-source license may be added in the future. Third-party financial data
-remains subject to its own source and Provider terms. See [LICENSE.md](LICENSE.md).
+remains subject to its own source and Provider terms. See [LICENSE.md](LICENSE.md) and
+[Third-Party Notices](THIRD_PARTY_NOTICES.md).

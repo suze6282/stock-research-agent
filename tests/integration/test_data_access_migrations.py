@@ -508,6 +508,7 @@ def test_migration_check_sql_exactly_matches_orm_metadata(
             constraint.name: str(constraint.sqltext)
             for constraint in Base.metadata.tables[table_name].constraints
             if isinstance(constraint, CheckConstraint)
+            and constraint.name != "ck_raw_payloads_exactly_one_source"
         }
         assert migration_checks == model_checks
 

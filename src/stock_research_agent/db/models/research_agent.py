@@ -311,6 +311,12 @@ class ResearchObservation(_CreatedUuidMixin, Base):
             ondelete="RESTRICT",
         ),
         ForeignKeyConstraint(
+            ["research_step_id"],
+            ["research_steps.id"],
+            name="fk_research_observations_step",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
             ["invocation_id"],
             ["research_tool_invocations.id"],
             name="fk_research_observations_invocation",
@@ -328,15 +334,27 @@ class ResearchObservation(_CreatedUuidMixin, Base):
             name="fk_research_observations_snapshot",
             ondelete="RESTRICT",
         ),
-        UniqueConstraint("invocation_id", name="uq_research_observations_invocation"),
         CheckConstraint(
             "status IN ('PASS','PARTIAL','BLOCKED','FAIL')",
             name="ck_research_observations_status",
         ),
         Index("ix_research_observations_run", "research_agent_run_id"),
+        Index(
+            "ux_research_observations_invocation_nonnull",
+            "invocation_id",
+            unique=True,
+            postgresql_where=text("invocation_id IS NOT NULL"),
+        ),
+        Index(
+            "ux_research_observations_component_step",
+            "research_step_id",
+            unique=True,
+            postgresql_where=text("invocation_id IS NULL"),
+        ),
     )
     research_agent_run_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
-    invocation_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    research_step_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    invocation_id: Mapped[UUID | None] = mapped_column(Uuid)
     observation_type: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False)
     schema_version: Mapped[str] = mapped_column(String(128), nullable=False)
