@@ -1350,3 +1350,13 @@ def test_posix_anchor_constructor_probes_before_becoming_usable(
     assert anchor._quarantine_fd == 95
     anchor.close()
     assert closed == [(95, True), (94, True)]
+
+
+def test_windows_last_error_binding_fails_closed_when_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = importlib.import_module("stock_research_agent.infrastructure.blob_storage")
+    monkeypatch.setattr(module, "_CTYPES_GET_LAST_ERROR", None, raising=False)
+
+    with pytest.raises(BlobStorageError, match="blob storage operation failed"):
+        module._win_last_error()

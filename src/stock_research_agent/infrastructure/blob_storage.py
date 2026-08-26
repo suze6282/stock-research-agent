@@ -392,9 +392,13 @@ class _FileDispositionInformation(Structure):
     _fields_ = [("delete_file", wintypes.BOOL)]
 
 
+_CTYPES_WIN_DLL: Any | None = getattr(ctypes, "WinDLL", None)
+_CTYPES_GET_LAST_ERROR: Callable[[], int] | None = getattr(ctypes, "get_last_error", None)
 _KERNEL32: Any | None = None
 if os.name == "nt":
-    _KERNEL32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    if _CTYPES_WIN_DLL is None or _CTYPES_GET_LAST_ERROR is None:
+        raise BlobStorageError("required Windows filesystem capabilities are unavailable")
+    _KERNEL32 = _CTYPES_WIN_DLL("kernel32", use_last_error=True)
     _KERNEL32.CreateFileW.argtypes = [
         wintypes.LPCWSTR,
         wintypes.DWORD,
@@ -462,6 +466,12 @@ def _win_close_best_effort(handle: int) -> None:
         _KERNEL32.CloseHandle(_win_handle(handle))
 
 
+def _win_last_error() -> int:
+    if _CTYPES_GET_LAST_ERROR is None:
+        raise BlobStorageError("blob storage operation failed")
+    return int(_CTYPES_GET_LAST_ERROR())
+
+
 def _win_open(
     path: str,
     *,
@@ -482,7 +492,7 @@ def _win_open(
     )
     value = c_void_p(raw_handle).value
     if value == _INVALID_HANDLE_VALUE:
-        error = ctypes.get_last_error()
+        error = _win_last_error()
         if error in {_ERROR_FILE_NOT_FOUND, _ERROR_PATH_NOT_FOUND}:
             raise _EntryMissing
         if error in {_ERROR_FILE_EXISTS, _ERROR_ALREADY_EXISTS}:
@@ -574,7 +584,7 @@ def _create_hard_link(source: str, destination: str) -> None:
         except OSError:
             raise BlobStorageError("blob storage operation failed") from None
     if not _KERNEL32.CreateHardLinkW(destination, source, None):
-        error = ctypes.get_last_error()
+        error = _win_last_error()
         if error in {_ERROR_FILE_EXISTS, _ERROR_ALREADY_EXISTS}:
             raise _EntryCollision
         raise BlobStorageError("blob storage operation failed")
