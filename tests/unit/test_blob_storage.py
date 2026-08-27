@@ -323,6 +323,11 @@ def test_failed_local_publication_cleans_only_files_created_by_call(
     unrelated = root / "unrelated"
     root.mkdir()
     unrelated.write_bytes(b"preserve")
+    instance = LocalBlobStorage(
+        root,
+        max_blob_bytes=100,
+        key_factory=_fixed_key("4" * 32),
+    )
     calls = 0
     if os.name == "nt":
         real_link = module._create_hard_link
@@ -346,11 +351,6 @@ def test_failed_local_publication_cleans_only_files_created_by_call(
             real_link_posix(*args, **kwargs)
 
         monkeypatch.setattr(module.os, "link", fail_second_posix_link)
-    instance = LocalBlobStorage(
-        root,
-        max_blob_bytes=100,
-        key_factory=_fixed_key("4" * 32),
-    )
 
     with pytest.raises(BlobStorageError) as captured:
         instance.put(b"content", content_type="text/plain")

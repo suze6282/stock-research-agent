@@ -3,6 +3,7 @@ from __future__ import annotations
 from typer.testing import CliRunner
 
 from stock_research_agent.cli import app
+from tests.support.cli_output import normalize_cli_output
 
 runner = CliRunner()
 
@@ -35,8 +36,10 @@ def test_rag_help_marks_search_as_explicit_persisted_write() -> None:
 def test_cli_exposes_document_and_retrieval_inspection_commands() -> None:
     document_help = runner.invoke(app, ["documents", "--help"])
     rag_help = runner.invoke(app, ["rag", "--help"])
+    document_tokens = set(normalize_cli_output(document_help.stdout).split())
+    rag_tokens = set(normalize_cli_output(rag_help.stdout).split())
 
     assert document_help.exit_code == 0
-    assert {"parse-status", "sections", "chunks", "verify"} <= set(document_help.stdout.split())
+    assert {"parse-status", "sections", "chunks", "verify"} <= document_tokens
     assert rag_help.exit_code == 0
-    assert {"vector-index", "citation", "retrieval-run"} <= set(rag_help.stdout.split())
+    assert {"vector-index", "citation", "retrieval-run"} <= rag_tokens
