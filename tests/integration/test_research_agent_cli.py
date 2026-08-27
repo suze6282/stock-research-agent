@@ -15,6 +15,7 @@ from typer.testing import CliRunner
 
 from stock_research_agent import cli
 from stock_research_agent.config import AppEnvironment, Settings
+from tests.support.cli_output import normalize_cli_output
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
@@ -125,7 +126,7 @@ def test_plan_and_run_require_explicit_snapshot_type_policy_and_as_of() -> None:
 
     assert plan.exit_code == run.exit_code == 2
     assert help_result.exit_code == 0
-    combined = help_result.output
+    combined = normalize_cli_output(help_result.output)
     assert "--snapshot" in combined
     assert "--type" in combined
     assert "--policy" in combined
