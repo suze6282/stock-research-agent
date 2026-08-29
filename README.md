@@ -246,7 +246,7 @@ docker compose ps
 The Compose password is a local example only. Do not commit a real value or reuse it in
 production.
 
-## Testing
+## Testing（External viewers here can ignore it）
 
 ```powershell
 uv run ruff check .
